@@ -16,3 +16,19 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+
+# PDF file
+*.pdf
