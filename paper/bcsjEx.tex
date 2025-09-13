@@ -1,0 +1,1242 @@
+\documentclass[header]{bcsj}
+\setPage{1}[11]
+\usepackage{graphicx}
+\usepackage{multirow}
+%
+\title{p\LaTeXe {} のクラス bcsj を用いた\\
+  「計算機統計学」への投稿原稿作成法~~}
+\author{
+  和文誌編集委員会\affil{
+  日本計算機統計学会和文誌編集委員会\email{wabun-query@jscs.or.jp}}
+}
+\makeatletter
+%\show\@starttoc
+\makeatother
+\def\biv{\relax}
+\def\psbox{\relax}
+\def\bsl{\mbox{$\backslash$}}
+
+\etitle{Dynamic scatterplot matrix and its implementation}
+
+\eauthor{Masahiro Mizuta\ethanks{Division of 
+Information and Graphics Science, Faculty of Engineering, \newline
+Hokkaido University, Sapporo 060, Japan}}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+日本計算機統計学会発行の和文誌「計算機統計学」原稿を，
+TeXLive-pLaTeX2e システム用に設計された
+文書クラス {\tt bcsj} を用いて作成する方法を詳細に解説します．
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{はじめに}
+日本語 \LaTeX{} 利用者のほとんどは，
+TeXLive の日本語対応が未だ十分ではないため，
+TeXLive と pLaTeX2e を組み合せたシステムを使っています．
+
+文書クラス {\tt bcsj} およびその定義ファイルである {\tt bcsj.cls} は，
+そのような環境に適合するよう，
+新たに設計されました．
+
+この解説の目的は，
+日本計算機統計学会発行の和文誌「計算機統計学」(以下では 本会誌 と呼びます) への
+掲載予定原稿を実際に作成する際，
+従うべきルールを具体的に示すことにあります．
+
+なお，
+この解説作成にも {\tt bcsj} クラスを用いていますので，
+出来上がり見本としても見ていただきたく思います．
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{原稿の構成要素}
+原稿は，以下のような構成で作成してください．
+{\baselineskip=0.96\baselineskip
+\begin{verbatim}
+ 1: \documentclass{bcsj}
+ 2:   プリアンブル
+ 3: \title{表題}
+ 4: \author{著者1氏名%
+ 5:   \affil{所属\email{電子メール}}
+ 6:   \and
+ 7:   著者2氏名%
+ 8:   \affil{所属\email{電子メール}}}
+ 9: \etitle{英語表題}
+10: \eauthor{著者1英語氏名%
+11:   \affil{英語所属}
+12:   \and
+13:   著者2英語氏名%
+14:   \affil{英語所属}}
+15: \keyword{英語キーワードの並び}
+16: \begin{document}
+17: \maketitle
+18: \begin{abstract}
+19:   日本語の要旨
+20: \end{abstract}
+21:   本文
+22: \begin{acknowledgement}
+23:   謝辞
+24: \end{acknowledgement}
+25: \begin{thebibliography}{}
+26:   参考文献リスト
+27: \end{thebibliography}
+28: \begin{eabstract}
+29:   英語の要旨
+30: \end{eabstract}
+31: \end{document}
+\end{verbatim}%
+}
+
+\subsection{文書クラスの宣言 (1:)}
+最初に文書クラスの宣言をします．
+使用可能なオプションは 2 つだけです．
+\smallskip\par\noindent
+\verb|\documentclass[draft]{bcsj}|
+\par
+文書が横幅をはみ出したとき，細い線を表示して，
+はみ出し量を把握できるようにします．
+\smallskip\par\noindent
+\verb|\documentclass[noheader]{bcsj}|
+\par
+最初のページの左上に小さく表示される「計算機統計学 …」
+を出力しません．
+
+\subsection{プリアンブル (2:)}
+原稿中で特別に使われるパッケージ (\LaTeX{} ライブラリ) や
+定義などをここに記述します．
+
+たとえば，
+文中に使われる図を EPS (Encapsulated {\sc PostScript}) 形式で作成し，
+大きさ指定等のオプション付きで挿入したい場合には，
+\smallskip\par\noindent
+\qquad\verb|\usepackage{graphicx}|
+\smallskip\par\noindent
+がここに必要でしょう
+(実際に図を挿入する方法については，第\,\ref{sec:tandf}\,節で述べます)．
+
+また，数式中の頻出するベクトルを斜体太字で表現したい場合，
+\smallskip\par\noindent
+\def\bm#1{\mbox{\boldmath$#1$}}\def\x{\bm x}%
+\qquad\verb|\def\bm#1{\mbox{\boldmath$#1$}}|
+\\
+\qquad\verb|\def\x{\bm x}|
+\smallskip\par\noindent
+とここで \verb|\x| を定義しておけば，
+文中で
+\par\quad
+ \verb|$\x=(x_1,\,\dots,\,x_n)'$|
+\par\hspace*{6em}
+$\mbox{}\to~~\x=(x_1,\,\dots,\,x_n)'$ 
+\par\noindent
+などのように使えます．
+
+原稿作成時には，定義部分を別ファイルに書き，
+プリアンブルには，\verb|\input{定義集.tex}| のように，
+そのファイルの読み込み指定だけを書くことがしばしばあります．
+その場合も，最終稿提出時には，
+別ファイルとせず，
+本文と一体化しておいてください．
+
+なお， 
+後述する自然な文献引用を可能にするパッケージ \verb|natbib| が
+自動的に読み込まれています．
+従って， \verb|natbib| を改めてここに記述する必要はありません．
+また，文献引用に関わる他のパッケージを指定してもいけません．
+
+\subsection{表題 (3:)}
+表題としては，重要なキーワードを全て含み，かつ，
+なるべく短い文字列を選んでください．
+2\,行以上で表示される長い表題には，
+途中に \verb|\\| を挟んで，
+強制改行することもできます．
+
+%表題も査読対象の一部ですから，
+%変更を求められることもあります．
+%よほどの大論文でない限り，
+%「… について」とか「… に関する一考察」などという
+%寝呆けた表題は避け，
+%的確な表現を望みます．
+%NAKA
+
+\subsection{著者 (4:-8:)}
+著者氏名および所属先と電子メールアドレスを記述する部分です．
+1\,名分の記述は
+\smallskip\par\noindent
+\quad\verb|宗像伝奇%|
+\\
+\quad\verb|  \affil{東亜文化大学文学部民族学教室%|
+\\
+\quad\verb|  \email{munakata@tbu.ac.jp}}|
+\smallskip\par\noindent
+のようであり，
+姓と名の間や
+所属先の区切りに空白を入れないでください．
+ただし，氏名が\,3\,文字以下の方は，
+全角空白を姓と名の間に入れ，\,4\,文字としてください．
+
+所属先の途中に強制改行が必要な場合は，
+\verb|\\| ではなく，
+\verb|\nl| ({n{\footnotesize ew}l{\footnotesize ine}\/}) を挿入してください．
+
+単一著者の場合はこの記述を，
+複数の著者がいる場合には，
+これらの間に \verb|\and| を挟んで並べ，
+全体を \verb|\author{| と \verb|}| で囲みます．
+著者名リストの途中で強制改行したいときは，
+区切りにオプション付きの \verb|\and[\\]| を使います．
+
+直前の著者と所属先が同じときは，
+\smallskip\par\noindent
+\qquad\verb|  館林真人\sameaffil|
+\smallskip\par\noindent
+のように書き，
+直前著者の \verb|\email| に「,\,」で区切って\,2\,人分 (またはそれ以上) の
+電子メールアドレスを書いてください．
+また，2\,人前の著者と同じ所属先ならば  \verb|\sameaffil[-2]| とすればよく，
+その他の場合も同様です．
+
+\subsection{英語表題 (9:)}
+英語表題としては，日本語表題と同様に，
+重要なキーワードを全て含み，かつ，
+なるべく短い文字列を選んでください．
+日本語表題の直訳である必要はありませんが，
+意味が異なるほどの違いは許されません．
+
+英語表題は，通常の大文字化ルールに従ってください．
+具体的には，
+\begin{enumerate}
+\item
+表題の始めは，
+どんな単語でも頭文字を大文字にする．
+\item
+名詞，代名詞，動詞，形容詞，副詞，従属接続詞 (等位接続詞以外の接続詞) は，
+単語の頭文字を大文字にする．
+\item
+冠詞，前置詞，不定詞 to，等位接続詞については，
+頭文字を小文字とする．
+ただし，5\,文字以上の前置詞は，大文字にしてもよい．
+\end{enumerate}
+%
+の\,3\,つのルールです．
+主な等位接続詞としては，
+and, or, not, but, for, except
+があります．
+ 
+たとえば，
+前置詞 from, via と冠詞 the 以外の頭文字を大文字として，
+\smallskip\par\noindent\quad
+~Maximum Likelihood from 
+\\\quad
+~Incomplete Data via the EM Algorithm
+\smallskip\par\noindent
+という具合です．
+
+%やや難しいのは，
+%同じ単語が使い方によって品詞が変わることで，
+%たとえば，as は前置詞にも接続詞にもなりますし，
+%in も前置詞あるいは副詞として出現します．
+%そうはいっても，
+%英語国民ではないので，
+%多少の間違いは仕方ないでしょう．
+%NAKA
+
+なお，2\,行以上で表示される長い表題には，
+途中に \verb|\\| を挟んで，
+強制改行することもできます．
+
+\subsection{英語著者名 (10:-14:)}
+著者氏名および所属先を英語で記述する部分です．
+通常使う英語表現で各著者の氏名・所属先を書きます．
+\smallskip\par\noindent
+\quad\verb|  Tadakusu Munakata%|
+\\
+\quad\verb|  \affil{Department of Ethnology,|
+\\
+\quad\verb|      Toa-bunka University}|
+\smallskip\par\noindent
+ただし，電子メールアドレスは不要です．
+
+日本語著者名と同様に，
+単一著者の場合はこの記述を，
+複数著者の場合には，
+これらの間に \verb|\and| を挟んで並べ，
+全体を \verb|\eauthor{| と \verb|}| で囲みます．
+
+このとき，
+\verb|\affil|, \verb|\and| にオプションをつけて，
+たとえば
+\smallskip\par\noindent
+\quad\verb|    Foo Bar\affil[,]{…}|\\
+\quad\verb|    \and|\\
+\quad\verb|    Fop Bas\affil{…}|\\
+\quad\verb|    \and[and]|\\
+\quad\verb|    Foq Bat\affil{…}|
+\smallskip\par\noindent
+のように書き，
+最終ページでは
+\smallskip\par\noindent
+~~~Foo Bar\rlap,$^{*}$~~~ Fop Bas$^{*\!*}$~~and~~~Foq Bat$^{*\!*\!*}$
+\smallskip\par\noindent
+と，きれいに並ぶように工夫してください．
+
+著者名リストの途中に強制改行を入れたい場合は，
+\verb|\and[\\]|, \verb|\and[\\and]| を用いてください．
+
+英語所属は，出来上がり時になるべく\,1\,行で表示されるよう，
+適切かつ統一的に省略した表現としてください．
+なお，\verb|\affil{…}| の \verb|{ }| 内の強制改行
+は \verb|\nl| ({n{\footnotesize ew}l{\footnotesize ine}\/}) で行います．
+
+\subsection{英語キーワード (15:)}
+内容に関係する重要な英語の
+キーワード，キーフレイズを\,$3\sim6$\,個程度書いてください．
+ただし，英語表題中に含まれるものは除きます．
+
+固有名詞や省略形などで特に必要な場合を除き，
+全て小文字で記述してください．
+また，原則として，単数形・単数扱いの名詞・名詞句です．
+
+この部分は，
+英語要旨開始 (28:) の前 または 英語要旨内容 (29:) 中に
+置くこともできます．
+
+\subsection{文書部分の開始とタイトル (16:-17:)}
+このとおり書いてください．
+文書の出力が開始され，
+まずは日本語表題，著者名が出力されます．
+
+\subsection{日本語要旨 (18:-20:)}
+原稿内容を要約を短くまとめ，
+\verb|abstract| 環境内に置きます．
+
+単一の段落で書くことを原則として，
+なるべく数式を使わずに書いてください．
+図表やディスプレイ数式 (\verb|$$...$$|, 
+\verb|equation| 環境, \verb|eqnarray| 環境) を含んではいけません．
+%
+また，文献参照は原則なしとし，
+どうしても必要な場合も最低限に留めてください．
+
+\subsection{本文 (21:)}
+通常の \LaTeX{} 文書の書き方に従ってください．
+すなわち，
+多くの原稿は \verb|\section{はじめに}| あるい
+は \verb|\section{序論}| から
+始まることでしょう．
+ただし，各ページが\,2\,カラムから成る
+オプション (\verb|twocolumn|) が設定されていますので，
+図表の扱いが標準的な \verb|onecolumn| の場合とは
+やや異なります (第\,\ref{sec:tandf}\,節で補足します)．
+また，参考文献の引用は，
+いわゆる Harvard スタイルと呼ばれる形式
+とします (第\,\ref{sec:bib}\,節で詳しく説明します)．
+
+節構造・表題付き段落の設定には，
+\smallskip\par\noindent
+\qquad\verb|\section|,~~ \verb|\subsection|, \\
+\qquad\verb|\subsubsection|, \verb|\paragraph|
+\smallskip\par\noindent
+が使えます．
+一方，書籍に用いられる \verb|\chapter|, \verb|\part| は
+使うことができません．
+
+付録をつけたいときは，
+\smallskip\par\noindent
+\qquad\verb|\appendix| \\
+\qquad\verb|\section{証明の詳細}|
+\smallskip\par\noindent
+のように，
+付録の始まりを宣言する \verb|\appendix| の後に，
+必ず新しい \verb|\section| を始めるようにしてください．
+
+\subsection{謝辞 (22:-24:) {\rmfamily (オプション)}}
+論文作成に重要な働きをした方への感謝の言葉や
+科学研究費等による資金援助を受けた事実など
+を \verb|acknowledgement| 環境内に書きます．
+
+\subsection{参考文献リスト (25:-27:)}
+参考文献の書き方と引用法は，
+第\,\ref{sec:bib}\,節で詳しく説明します．
+
+\subsection{英語要旨 (28:-30:)}
+英語による要約を \verb|eabstract| 環境中に書きます．
+日本語の要旨よりも詳しく，
+この部分だけで内容が十分に理解できるように
+工夫してください．
+
+日本語本文の節・数式・図表などへの参照をしてはいけません．
+逆も同様に，
+本文中における英語要旨部分への参照も禁止します．
+また，数式の使用も最低限とし，
+式番号のつく数式 (\verb|equation| や\verb|eqnarray|) の
+使用はできません．
+
+英語要旨は，英語の表題，著者名，所属の後，
+英語キーワードの前に出力されます．
+要旨の長さを定める条件は，
+英語ページが\,1\,ページに収まることです．
+
+\subsection{文書の終わり (31:)}
+\LaTeX 文書の終わりを示します．
+この後に書かれた部分は全て無視されます．
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{図表に関する補足}\label{sec:tandf}
+図や表の取扱いは，
+\LaTeX における常識的な扱い方に従います．
+%ただ，
+%これだけでは \LaTeX{} (特に \verb|twocolumn| オプション付き) に
+%不慣れな方には，
+%具体的な書き方が分からない面がありますので，
+%簡単に補足しておきます．
+%NAKA
+
+\subsection{図表のための環境}
+図は \verb|figure| 環境 または \verb|figure*| 環境中に置きます．
+また，表は \verb|table| 環境 または \verb|table*| 環境中に置きます．
+後ろに \verb|*| がない環境では\,1\,カラム内に書かれ，
+\verb|*| が付いた環境ではカラムをまたいで幅広く書かれます．
+
+環境に対するオプションは，
+原則として \verb|[tbp]| としてください．
+すなわち，ページ上部，下部，図表専用ページ，
+と図表を置く位置の優先順位を定めます．
+ただし，積極的に図表専用ページを作りたいときは \verb|[p]| です．
+なお，定義した位置に置くオプション \verb|[h]| は，
+なるべく避けてください．
+また，\verb|*| 付き環境に \verb|[h]| は使えません．
+
+  \begin{figure*}[tbp]
+  \begin{center}
+     \framebox{\hbox to 0.9\hsize{\hfill 横幅×0.9 の四角\hfill}}
+  \end{center}\unskip
+  \caption{幅が広い図 (figure*) の例}
+    \label{fig:2col}
+  \end{figure*}
+
+たとえば，ここに
+{\baselineskip=0.8\baselineskip
+\begin{verbatim}
+  \begin{figure*}[tbp]
+  \begin{center}
+     \framebox{\hbox to 0.9\hsize{%
+        \hfill 横幅×0.9 の四角\hfill}}
+  \end{center}\unskip
+  \caption{幅が広い図 (figure*) の例}
+    \label{fig:2col}
+  \end{figure*}
+
+  \begin{figure}[tbp]
+  \begin{center}
+     \framebox{\hbox to 0.9\hsize{%
+        \hfill 横幅×0.9 の四角\hfill}}
+  \end{center}\unskip
+  \caption{幅が狭い図 (figure) の例}
+    \label{fig:1col}
+  \end{figure}
+\end{verbatim}}
+%
+  \begin{figure}[tbp]
+  \begin{center}
+     \framebox{\hbox to 0.9\hsize{%
+        \hfill 横幅×0.9 の四角\hfill}}
+  \end{center}\unskip
+  \caption{幅が狭い図 (figure) の例}
+    \label{fig:1col}
+  \end{figure}
+\noindent
+と書けば，ページの先頭に\,2\,つの図が書かれているはずです．
+
+なお，どちらも幅 0.9\verb|\hsize| の四角を描いているはずなのに，
+実際に書かれた幅は大きく違います．
+これは， \verb|\hsize| が「文書が書ける横幅」を表しているためで，
+図を外部ファイルから取り込む際に便利な単位です．
+また，\verb|\unskip| という命令は，
+センタリング環境  (\verb|center|) がこの直前に置いた
+余分な空白部分をなくす効果があり，
+図表題との適切な間隔を保ちます．
+
+図表番号の参照には，
+図表表題 \verb|\caption| の後に置いた \verb|\label| で
+定義した参照記号列を用いて，
+\smallskip\par\noindent
+$\verb|   \figurename~\ref{fig:2col}| \to
+  \mbox{\figurename~\ref{fig:2col}}$
+\smallskip\par\noindent
+のように行います．
+表の場合は， \verb|\figurename| に替えて，
+\verb|\tablename| です．
+もちろん，本会誌での使用に限定すれば，
+\verb|図|\,や\,\verb|表|\,を使っても結構です．
+%
+なお，\verb|~| (波型）は，``\verb|Mr.~A|'' のような場合にも使われ，
+ここで改行されず，かつ，``.'' の後ろでも大きく空かない空白です．
+
+本会誌でもそうですが，
+\verb|\caption| と \verb|\label| の組は，
+図では本体の下に，表では本体の上に置くのが普通です．
+
+なお，\verb|*| 付き環境図表と \verb|*| なし環境図表が混在するとき，
+図表番号と表示順が前後することがあります．
+最終稿では，定義を適当な位置に移すなど，
+できるだけ前後しないように工夫してください．
+
+\subsection{表の挿入}
+表は \verb|tabular| 環境等を用いて \LaTeX{} で書く，
+あるいは
+様々なソフトで可能な \LaTeX{} 形式
+(\verb|tabular|, \verb|array|, \verb|tabbing| などを利用) 
+での出力を用いることを基本とします．
+表計算ソフト等で作成した表 (表の形をした図) を貼ることは避けてください．
+
+%このとき，必要以上の縦線・横線を入れないことが
+%表をすっきりと見やすくするコツです．
+%NAKA
+
+
+\subsection{図の挿入}
+図は \verb|picture| 環境を用いて
+書くこと
+% (フローチャートを \verb|picture| 形式で
+%作成するソフト利用を含め)
+%NAKA
+ もありますが，
+他のソフトで作成したグラフなどを用いることが
+多いと思います．
+
+図を保持する外部ファイルとしては，
+EPS (*.eps) 形式とするのが，
+最も可搬性が高い方法です．
+また，PDF (*.pdf) も，
+(最近の Adobe Illustrator 出力など) 
+bounding box 情報 (図の座標範囲情報) を持っていれば，
+たいてい利用可能です．
+%逆に，日本語版が未だない pdftex, pdflatex では，
+%EPS 形式の図を一度 PDF に変換するほどです．
+%NAKA
+
+EPS 形式の図の挿入には，
+前述のように，まずプリアンブルで
+\smallskip\par\noindent
+\qquad\verb|\usepackage{graphicx}|
+\smallskip\par\noindent
+と，\verb|graphicx| パッケージの追加が必要です．
+原寸での挿入には，
+\smallskip\par\noindent
+\qquad\verb|\includegraphics{ファイル名.eps}|
+\smallskip\par\noindent
+で十分ですが，通常はカラム幅に合わせるように
+サイズを調整します．
+たとえば，
+\smallskip\par\noindent
+\quad\verb|\includegraphics[width=0.75\hsize]|
+\\
+\qquad\verb|      {napprox.eps} 図挿入例|
+\smallskip\par\noindent
+とすれば，
+\medskip\par\noindent
+\includegraphics[width=0.75\hsize]
+   {napprox.eps} 図挿入例
+\medskip\par\noindent
+のように，
+幅がカラム横幅の 0.75 倍になるよう拡大・縮小された図が，
+あたかも大きな\,1\,文字のように出力されます．
+%
+ですから，いくつかの図を横に並べて表示したい時は，
+高さを揃えると比較的きれいです．
+たとえば，
+{\baselineskip=0.85\baselineskip%\smallskip\par\noindent
+\begin{verbatim}
+   \begin{tabular}{cc}
+   \includegraphics[height=25mm]
+      {napprox.eps} 
+   &
+   \includegraphics[height=25mm]
+      {napprox2.eps} 
+   \\
+   (a) PDF & (b) CDF
+   \end{tabular}
+\end{verbatim}}
+\noindent
+とすれば，
+\medskip\par\noindent
+\begin{tabular}{cc}
+  \includegraphics[height=25mm]
+     {napprox.eps} 
+  &
+  \includegraphics[height=25mm]
+     {napprox2.eps} 
+  \\
+  (a) PDF & (b) CDF
+  \end{tabular}
+\medskip\par\noindent
+という出力が得られます．
+
+\subsection{図は白黒できれいに}
+本会誌は，原則として，モノクロ印刷をします．
+また，グレーの微妙な違いの表現力についても，
+写真並みとはいきませんので，
+あまり期待しないでください．
+
+%ただし，印刷して汚い図では困ります．
+可能な限り，きれいな図を作成してください．
+一見きれいにみえても，
+画面上では 96ドット/インチ での表示精度ですが，
+印刷時には 300$\sim$2400 ドット/インチ 以上の精細さが要求されます．
+
+したがって，しばしば表計算ソフトが出力する
+bitmap graphics は，
+そのままでは使い物になりません．
+可能ならば，
+EPS (単なる bitmap の EPS 化では意味ありません) など，
+より精細な図表現ができる代替出力形式を選んでください．
+
+Web ページ画面など，
+どうしても bitmap にせざるを得ない場合は，
+大きな図を描き，それを EPS 化して，
+さらに
+\smallskip\par\noindent
+\qquad\verb|\includegraphics[scale=0.25]|
+\\
+\qquad\verb|      {bitmap.eps}|
+%\includegraphics[scale=0.25]{napprox2.eps} 
+\smallskip\par\noindent
+のように (あるいは \verb|width| や \verb|height| などを用いて)，
+1/3 以下に縮小してください．
+もちろん，bitmap の画素が見える必要がある場合を除きます．
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{参考文献の書き方と引用法}\label{sec:bib}
+本会誌で指定している参考文献引用の書き方は，
+Harvard スタイルと呼ばれるもので，
+パッケージ {\tt natbib} が標準としている形式です．
+つまり，[23] や [Ak95] のような引用文献番号や文献記号によるのではなく，
+赤池 (1995) のように，
+著者名と発表年を本文中に書くものです．
+
+\subsection{参考文献リスト}
+参考文献を記述した \verb|\bibitem| を
+\smallskip\par\noindent
+\verb|      \begin{thebibliography}{}|
+\\[-1ex]
+と
+\\[-1ex]
+\verb|      \end{thebibliography}|
+\smallskip\par\noindent
+の間に，
+第一著者 (人間ならばその姓) の英語表記の辞書順に並べます．
+
+同一著者 (の組み合せ) の文献がある場合は，
+発表の早い順とし，
+同一発表年のものがあれば，
+発表年を (2013a), (2013b) のようにします．
+
+標準的な書き方は，
+学術雑誌掲載論文の場合，単行本の場合ではそれぞれ，
+\begin{verbatim}
+   \bibitem[著者名等(発表年)]{参照記号}
+      著者名のリスト (発表年). 表題, 
+      {\em 発表雑誌}, {\bf 巻}(号), 
+      開始ページ--最終ページ.
+   \bibitem[著者名等(発表年)]{参照記号}
+      著者名のリスト (発表年).  
+      {\em 書籍名}, 発行所.
+\end{verbatim}
+とします．
+ここで，\verb|( ) { } [ ] , . -| は全て半角文字です．
+なお，
+雑誌や書籍名が日本語の場合，
+\verb|\em| はつけないでください．
+日本語が全て全角漢字の場合，
+\verb|\em| はあってもなくても同じですが，
+フォントがないという警告が出ます．
+
+論文・書籍以外の場合は，これらに準拠してください．
+たとえば，technical report では，
+\begin{verbatim}
+   \bibitem[著者名等(発表年)]{参照記号}
+      著者名のリスト (発表年). 表題, 
+      {\em シリーズ名}, 番号, 発行機関.
+\end{verbatim}
+のようになるかも知れません．
+
+なお，\verb|{参照記号}| は，
+本文中からの引用において，
+文献を指定するために用いるもので，
+同じものがあってはいけません．
+
+\subsection{Harvard スタイルでの引用文字列定義}
+引用著者名・発表年を定義する \verb|\bibitem| 直後の \verb|[ ]| 中では，
+(発表年) の前後に空白がなく,
+次の (発表年) の前には空白，後ろには . (ピリオド) が
+あることに注意してください．
+
+\verb|[ ]| 中の (発表年) の前の部分は，
+本文中の引用されるとき，
+著者名等として書かれるもので，
+… et al.~や … ら, … 他 といった省略形の場合もあります．
+(発表年) の後で \verb|]| までの部分に記述があれば，
+省略しない著者名リストとして扱われます．
+
+具体的な使い方は，
+引用方法の実例を見てください．
+
+\subsection{本文中での引用方法}
+
+いま，参考文献リストとして，
+次のような記述があるものとします．
+{\small
+\begin{verbatim}
+ \begin{thebibliography}{}
+ \bibitem[赤池・北川\,編(1994)]{AandK1}
+    赤池弘次・北川源四郎 (編) (1994).  
+    {時系列解析の実際\,I}, 朝倉書店.
+ \bibitem[赤池・北川\,編(1995)]{AandK2}
+    赤池弘次・北川源四郎 (編) (1994).  
+    {時系列解析の実際\,II}, 朝倉書店.
+ \bibitem[Ishiguro et al.(1997)%
+    Ishiguro, Sakamoto \& Kitagawa]{ISK} 
+    Ishiguro M., Sakamoto Y. \& 
+    Kitagawa G. (1997).
+    Bootstrapping log likelihood and EIC, 
+    an extension of AIC, 
+    {\em Ann. Inst. Statist. Math.}, 
+    {\bf 49}(3), 411--434.
+ \end{thebibliography}
+\end{verbatim}}
+これにより作られる参考文献リストは，
+次のようです．
+\par\noindent
+\vrule width 0.99\hsize height 0.5pt
+\par\vspace{-2.5ex}\noindent
+ \begin{thebibliography}{}
+ \bibitem[赤池・北川\,編(1994)]{AandK1}
+    赤池弘次・北川源四郎(編) (1994).  
+    {時系列解析の実際\,I}, 朝倉書店.
+ \bibitem[赤池・北川\,編(1995)]{AandK2}
+    赤池弘次・北川源四郎(編) (1995).  
+    {時系列解析の実際\,II}, 朝倉書店.
+ \bibitem[Ishiguro et al.(1997)%
+    Ishiguro, Sakamoto \& Kitagawa]{ISK}
+%    Ishiguro M., Sakamoto Y. and 
+    Ishiguro M., Sakamoto Y. \& 
+    Kitagawa G. (1997).
+    Bootstrapping log likelihood and EIC, 
+    an extension of AIC, 
+    {\em Ann. Inst. Statist. Math.}, 
+    {\bf 49}(3), 411--434.
+ \end{thebibliography}
+\vspace{-2.5ex}\noindent
+\vrule width 0.99\hsize height 0.5pt
+\medskip\par
+
+これらの文献を本文中から参照するには，
+括弧 (~~) で囲まれた引用 \verb|\citep|, \verb|\citep*|
+および 括弧なしの引用 \verb|\citet|, \verb|\citet*| を使います．
+
+単独の文献参照は，
+\vspace{-1ex}
+\begin{verbatim}
+    1: \citep{ISK}\\
+    2: \citep*{ISK}\\
+    3: \citet{ISK}\\
+    4: \citet*{ISK}\\
+    5: \citep[参照]{ISK}\\
+    6: \citet[印刷中]{ISK}\\
+    7: \citep[たとえば][]{ISK}\\
+    8: \citep[詳細は][参照]{ISK}
+\end{verbatim}
+\vspace{-0.5ex}
+\noindent
+とすると，以下のように表示されます．\\[1ex]
+  1: \citep{ISK}\\
+  2: \citep*{ISK}\\
+  3: \citet{ISK}\\
+  4: \citet*{ISK}\\
+  5: \citep[参照]{ISK}\\
+  6: \citet[印刷中]{ISK}\\
+  7: \citep[たとえば][]{ISK}\\
+  8: \citep[詳細は][参照]{ISK}
+\bigskip\par\noindent
+また，複数の文献参照
+\vspace{-1ex}
+\begin{verbatim}
+    1: \citep{AandK1,ISK}\\
+    2: \citet{AandK1,ISK}\\
+    3: \citep{AandK1,AandK2}\\
+    4: \citet{AandK1,AandK2}
+\end{verbatim}
+\vspace{-0.5ex}
+\noindent
+は，このように表示されます．\\[1ex]
+   1: \citep{AandK1,ISK}\\
+   2: \citet{AandK1,ISK}\\
+   3: \citep{AandK1,AandK2}\\
+   4: \citet{AandK1,AandK2}
+\bigskip\par\noindent
+オプションの使い方も同様です．
+なお，
+同一著者で同一発表年の文献を複数同時に引用すると，
+\smallskip\par\noindent
+\quad
+ (Author, 2013a, b),\quad Author (2013a, b)
+\smallskip\par\noindent
+のように表現されます．
+
+\subsection{文献引用に関する補足}
+\subsubsection{\bsl cite\,命令}
+\LaTeX{} の文献引用に標準的に使われる \verb|\cite| は，
+標準の \verb|natbib| パッケージでは (?) となってしまいますが，
+\verb|\citep| として取り扱います．
+\subsubsection{文献データベースの利用} 
+\verb|bibliography| 環境で定義した
+データベースから，
+実際に引用された文献だけからなる \verb|thebibliography| を
+自動的に作り出すこともできます．
+また，\verb|natbib| のため文献記述スタイル (*.bst) も
+いくつか用意されています．
+
+なお，投稿時には，この解説で述べた文書構造に合わせ，
+作成された \verb|thebibliography| を
+文書中に取り込んでください．
+
+\verb|\citeauthor| や \verb|\citeyear| など，
+他の引用法を含め，
+詳しくは，
+\verb|natbib| に関する web 上の記事を参照してください．
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{一般的な注意}
+クラス bcsj の使用法は以上ですが，
+このクラスに限らず，
+日本語で \LaTeX{} 原稿を作成する上での注意点を
+掲げておきます．
+
+\subsection{漢字コードとして Shift-JISとUTF-8 を用意}
+
+
+日本語＋英語に限らず，
+複数の言語を一つの文章中に
+入れられる UTF コード (特に UTF-8) を
+漢字コードとして使うことが普通になっています．
+
+%\LaTeX{} 使用時には，
+%\TeX{} システムが扱えないソーティングなどの処理を
+%Perl などの別システムに委ねることがあります．
+%このとき，漢字コードの一部に
+%制御文字が含まれている Shift-JIS コードでは正常動作しないため，
+%わざわざ他の漢字コードに変換して，
+%処理後にまた戻すという手間がしばしばあり，
+%あまり歓迎できません．
+
+ただ，
+多数のユーザが用いている Windows では，
+%問題の多い 
+Shift-JIS コードが
+%未だに
+使われています．
+%いることもまた事実です．
+
+そこで， {\tt bcsj.cls} として，
+UTF-8 版と Shift-JIS 版を学会 HP に用意しています．
+その他の漢字コード (JIS, EUC, UTF-16 など) しか使えない環境下の方は，
+{\tt nkf} などでコード変換するか，
+任意のコードが使えるエディタに読み込んで変換保存をして下さい．
+
+%MacOS では，
+%ユーザに見えるところの一部では Shift-JIS が使われていますが，
+%内部表現は UTF-8 です．
+%また，Mac で最もよく使われている \TeX{} 文書
+%作成環境 TeXShop を使う際には，
+%すでに UTF-8 を使うことが普通になっています．
+%もし，Shift-JIS コードをお使いの場合は，
+%今後 UTF-8 で文書を書くことをお勧めします．
+
+\subsection{機種依存文字，半角カタカナ等の使用禁止}
+前項にも関係しますが，
+漢字コードおよび OS により，
+同じ対応コードに別の文字が割り当てられていること
+や存在しないことがあり，
+「機種依存文字」と呼ばれます．
+括弧つき文字 (\kern-2.5pt{\small 株}\kern-3pt) や
+丸数字 ○\kern-0.7zw{\footnotesize\raisebox{0.2ex}{1}} が
+その代表です．
+%
+また，半角カタカナも一種の機種依存文字といえ，
+%これらを使用してはいけません．
+これらは使用しないでください．
+
+括弧つき文字や丸数字は，
+半角の括弧で包んだ (株) あるいは (1) などで代用できることが
+ほとんどでしょう．
+また，半角カタカナは全角としてください．
+スペースの都合で全角にできない場合は，
+小さな文字
+\par\quad
+ $\verb|{\footnotesize カタカナ}|\to\mbox{{\footnotesize カタカナ}}$ 
+\par\quad
+ $\verb|{\tiny カタカナ}|\to\mbox{{\tiny カタカナ}}$
+\par\noindent
+の使用で回避してください．
+ただし，\verb|\tiny| サイズの文字は，
+小さ過ぎるので，
+ルビ以外の目的には勧めません．
+
+全角漢字として含まれている
+外国語の文字 (ギリシャ文字 α やキリル文字 Д) も，
+特別な必要がない限り，使用を禁じます．
+%
+なお，ギリシャ文字は，
+$\verb|$\alpha$|\to \alpha$ のように，
+数式要素として記述できます．
+
+%UTF-8 コードを用いれば，
+%通常使われる世界中ほとんどの言語を取扱うことができますが，
+%\LaTeX{} では，
+%必ずしも期待されたように出力されない場合があります．
+
+\subsection{縦書きの使用など}
+%本会誌に限らず，理系雑誌一般において，
+%特別な理由と編集委員会の事前承認がなければ，
+%縦書き原稿は認められません．
+%また，大きな横長図表を書くため，
+%1\,ページ全体を 90°回すことも，
+%また認められません．
+
+%ページの一部に縦書きを使用することに対しては，
+%雑誌によって対応が様々です．
+本会誌においては，
+%狭い \verb|twocolumn| 形式を採用していることに鑑み，
+横書きが困難な場合，
+図表の要素に限って，縦書きを使用してください．
+
+たとえば\par
+{\baselineskip=0.75\baselineskip\vspace{-1ex}
+\begin{verbatim}
+    \begin{tabular}{cccccccc} 
+    \multicolumn{2}{r}
+       {\raisebox{1em}{説明項目}}
+     & \hbox{\tate 活動年数} 
+     & \hbox{\tate アルバム数} 
+     & \hbox{\tate 受賞歴} 
+     & \hbox{\tate ジャンル} 
+     & \hbox{\tate 国籍} 
+     & \hbox{\tate 受賞年齢} 
+    \\\hline
+    \multirow{4}{*}
+      {\hbox{\tate ~アーティスト}}
+      & Addel & 5& 2& 6& 2& 2& 2\\
+      & A Fire& 7& 3& 0& 1& 3& 3\\ 
+      & Swift & 3& 2& 3& 3& 1& 2\\
+      & P\&K  &43&47& 1& 2& 1& 4\\ 
+    \hline
+    \end{tabular}
+\end{verbatim}}
+とすれば，
+以下のような表が作成できます．
+\begin{center}
+  \begin{tabular}{cccccccc} 
+  \multicolumn{2}{r}
+     {\raisebox{1em}{説明項目}}
+   & \hbox{\tate 活動年数} 
+   & \hbox{\tate アルバム数} 
+   & \hbox{\tate 受賞歴} 
+   & \hbox{\tate ジャンル} 
+   & \hbox{\tate 国籍} 
+   & \hbox{\tate 受賞年齢} 
+  \\\hline
+   \multirow{4}{*}
+    {\hbox{\tate ~アーティスト}}
+     & Addel & 5& 2& 6& 2& 2& 2\\
+     & A Fire& 7& 3& 0& 1& 3& 3\\ 
+     & Swift & 3& 2& 3& 3& 1& 2\\
+     & P\&K  &43&47& 1& 2& 1& 4\\ 
+\hline\\[-2ex]
+\end{tabular}
+\end{center}
+なお，\verb|\multirow| 命令を使うには，
+プリアンブルでのパッケージ指定
+\smallskip\par\noindent
+\verb|      \usepackge{multirow}|
+\smallskip\par\noindent
+が必要です．
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{旧文書スタイル {\tt kt2} との違い}
+初めて「計算機統計学」に投稿される方にはあまり関係ありませんが，
+これまで寄稿されている方のために，
+旧スタイル ({\tt kt2.sty}) との違いを列挙しておきます．
+\smallskip
+
+最新のパッケージが使えるなど，
+対応システムに起因する変化を除けば，
+大きく変わった点は参考文献の書き方のみで，
+それ以外は，見掛け上，
+なるべく小さな差異に留めています (参考文献に関する記述は，
+第\,\ref{sec:bib}\,節にあります)．
+
+\subsection{全体のレイアウトについての変更点}
+\begin{enumerate}
+\item
+ページ中の印字部分を少し下に下げました．
+
+これにより，上の余白が下の余白に比べて狭く，
+不安定な印象を持つ点を解消しました．
+\item
+カラム間の空白幅を縮めました．
+
+標準の\,3\,倍近い 12mm 
+(原稿作成時寸法，印刷時は 10mm 程度に縮小されます．以下も同じ) 
+もあった空白を 8mm にしました．
+これにより，各カラムの幅 82mm (全角\,22\,文字分) は不変ですが，
+空白部分を含めた印字幅は 172mm と 4mm 短くなりました．
+\par{\parindent=1zw
+この変更により，
+空白が広すぎる印象と
+左右の余白が少なすぎて内側部分が見づらい点を緩和します．
+}
+\item
+漢字の詰め過ぎを緩和しました．
+
+%お気づきの方もあると思いますが，
+%本会誌では漢字間を少し詰めて，
+%狭いカラム内になるべく多数の字が入る工夫を行っています．
+%\par{\parindent=1zw
+%ただし，文字が重なるほど詰めてしまう場合もありましたので，
+%そうならないように調整しました．
+%}
+\item
+行間をわずかに詰めました．
+
+行間をやや広めにとっていましたので，
+少しだけ (約 2.5\%) 詰めました．
+\end{enumerate}
+
+\subsection{表題部分に関する変更}
+\begin{enumerate}
+\item
+複数の著者名間の・を取り除きました．
+
+%打たれた ・ は氏名間の中心でもなく，
+%あまり見栄えも良くないので，
+%取り除きました．
+%NAKA
+
+\item
+\verb|\and| 機能の拡張をしました．
+
+オプションにより，
+任意の文字や強制改行が著者名間に入れられるようにしました．
+たとえば，\verb|\and[\\]| とすると改行します． 
+\item
+所属は \verb|\affil| で記述します． 
+
+詳細は前述の通りです．
+\verb|\affil| につけたオプションは，\verb|[,]| 以外にも，
+著者名の直後に何かを書くために使えます．
+たとえば，
+\smallskip\par\noindent
+\verb|  Author\affil[\small..(x.x)]{…}|
+\\\hspace{6em}$\to$~~ Author\rlap{\small ..(x.x)}$^*$
+\smallskip\par\noindent
+です．
+%
+なお，所属記述に \verb|kt2| 流の \verb|\thanks|, \verb|\ethanks| は使えません．
+本来の脚注用として \verb|\thanks| を使えますが，
+オプションはありません．
+ただし，当分の間，\verb|\same| は \verb|\sameaffil| の代わりに使えます． 
+
+{\parindent=1em
+改訂に伴い，\verb|\same[-2]| のように，
+\verb|[-1]| 以外のオプションを指定した後の参照記号のズレもなくなりました．
+}
+\item
+住所（電話番号）は省くことにします．
+
+前述のように， 
+\verb|\affil{…}| の … 部分には，
+所属に加えて，
+電子メールアドレスだけを書くことに改めました．
+もし，住所あるいは電話番号を付け加えたいときには，
+\par
+\verb|  \affil{所属\poaddr{住所}%|\\
+\verb|      \phone{電話番号}\email{…}}|
+\par\noindent
+のように書いてください．
+なお，住所部分の先頭には\,〒\,が自動的に付加されますので，
+住所記述は郵便番号から始めてください．
+\item
+所属に関する脚注参照記号を変更しました．
+
+参照記号が，
+\smallskip\par
+\makeatletter
+\def\prfns#1\or{${}^{#1}$\prfnsAux}
+\def\prfnsAux{\@ifnextchar~{\relax}{, \prfns}}
+\quad~\prfns *\or **\or ***\or
+   ****\or *****\or ******\or \dagger\or \dagger\dagger
+   \or \ddagger\ddagger \or~
+\makeatother
+\smallskip\par\noindent
+の順に定義されていましたが，
+あまりに幅を取り過ぎているので，
+\smallskip\par
+\quad~\prfns *\or *\!*\or *\!*\!*\or 
+   \dagger\or \dagger\!\dagger\or\dagger\!\dagger\!\dagger\or
+   \ddagger\or \ddagger\!\ddagger\or \ddagger\!\ddagger\!\ddagger\or~
+\smallskip\par\noindent
+の順に変えました．
+\end{enumerate}
+
+\subsection{本文の構成に関わる変更点，その他}
+\begin{enumerate}
+\item
+文書の構成順を改めました．
+
+従来の並び順
+\smallskip\par\noindent
+\quad~ 本文 → 謝辞 → 参考文献 → 付録
+\smallskip\par\noindent
+から，
+\smallskip\par\noindent
+\quad~ 本文 → 付録 → 謝辞 → 参考文献
+\smallskip\par\noindent
+に変更しました．
+%
+%その理由は，
+%\begin{enumerate}
+%\item
+%謝辞は付録の一種である．
+%\item
+%感謝の意を表した後，
+%また内容の一部を語るのは失礼である．
+%\item
+%付録から参考文献を参照することがあるので，
+%位置関係がおかしい．
+%\item
+%参考文献は，英文要旨を除けば，
+%最後の部分にある方が見つけやすい． 
+%\end{enumerate}
+%という\,4\,点です．
+%NAKA
+
+\item
+謝辞環境 \verb|acknowledgement| を作りました．
+
+%内容は前述の通りです．
+%変更の目的は，
+%謝辞に関する書式の統一にあります．
+\item
+英語表題の大文字化をやめました．
+
+%見づらいだけで，
+%大文字表示するメリットは「ルールに従わない大文字使用を隠す」こと
+%以外にはないようなので，
+%やめることにします．
+%なお
+ただし，旧スタイルとの互換性保持のため，
+\verb|\etitle| と \verb|\etitles| は同じものとしています． 
+\item
+節 (section) 番号の参照時に
+\smallskip\par\noindent
+$\verb|   第\,\ref{defnsec}\,節|\to\mbox{第\,2.\,節}$
+\smallskip\par\noindent
+のようになっていたところを，
+\smallskip\par\noindent
+$\verb|   第\,\ref{defnsec}\,節|\to\mbox{第\,2\,節}$
+\smallskip\par\noindent
+に改めました．
+したがって，従来
+\smallskip\par\noindent
+\verb|   「\,\ref{defnsec} |いくつかの\\
+\verb|      定義」|の節では …
+\smallskip\par\noindent
+などとしていた場合では，
+\smallskip\par\noindent
+\verb|   「\,\ref{defnsec}. |いくつかの\\
+\verb|       定義」|の節では …
+\smallskip\par\noindent
+としてください．
+なお，\verb|subsection| 以下は従来通りです．
+\item
+編集用命令を一部変更しました．
+
+従来の \verb|\kan|, \verb|\gou|, \verb|\nen|, 
+\verb|\startp|, \verb|\endp| に替わり，
+\smallskip\par\noindent
+\quad~
+\verb|\setIssue{巻}{号}{発行年}|,
+\\\quad~
+\verb|\setPage{開始ページ}[終了ページ]|
+\smallskip\par\noindent
+を，また，英語ページに履歴を入れられる
+\smallskip\par\noindent
+\quad~
+\verb|\setHistory{受付日}[改訂日]|
+\smallskip\par\noindent
+を作りました．
+管理用につき，これ以上の説明は致しません．
+\end{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{おわりに}
+%本会誌には，長い間，
+%古い \LaTeX{} 文書スタイル (文書クラスではなく) のみしか用意しておらず，
+%ご迷惑をおかけしてきました．
+%今後は，会員各位のご要望に沿えるように努力して参ります．
+
+新文書クラス bcsj および 本会誌に関する
+ご質問・ご要望 また お気づきの点がございましたら，
+%遠慮なく，
+和文誌編集委員会あてお寄せください．
+
+%たとえば，「現行の \verb|twocolumn| はやめにして，
+%\verb|onecolumn| にすべき」などという，
+%大きな変更を伴うようなご提案も歓迎致します．
+%NAKA
+
+\begin{acknowledgement}
+旧文書スタイルの見直しを含め，
+本文書クラス \verb|bcsj.cls| の設計・製作および当面の保守を，
+経験豊富な \TeX{}nician である 仁木直人 教授 (東京理科大学工学部) に依頼致しました．
+ここに記して謝意を表します.
+
+なお，{\tt bcsj} クラスに関し，
+仁木教授 への直接コンタクトはご遠慮ください．
+\end{acknowledgement}
+%\end{document}
+
+
+%\setHistory{Aug.~27, 2014}[Aug.~28, 2014]
+\setHistory{m.~d, y}[m.~d, y]
+\etitle{Instruction for authors\thanks{Thanks a lot!}}
+\eauthor{ 
+     Ichiro Ridai \affil[,]{Department of AAAA,
+     % \nl
+     XXXX University}
+  \and Jiro {Daigaku}\affil[,]{Department of BBBB, XYXY University}
+%  \and[\\] 
+  \and
+  Saburo {Ridai}\sameaffil[-2]
+  \and[and] Siro {Tandai}\affil{Department of CCCC, YZYZ University}
+}
+\keyword{key1, key2, key3}
+\begin{eabstract}
+This abstract is only for test 
+of the document class ``bcsj''.
+This abstract is only for test 
+of the document class ``bcsj''.
+This abstract is only for test 
+of the document class ``bcsj''.
+
+This abstract is only for test 
+of the document class ``bcsj''.
+This abstract is only for test 
+of the document class ``bcsj''.
+\end{eabstract}
+\vspace{2em}
+%\framebox{\hbox{\tate 英語ページと縦書きの見本}}
+%\framebox{\hbox{\tate abc-def. {\large あ gh} ijk}}
+%\framebox{\hbox to 4cm{\tate \Large 「ちゃ」，．、。}}
+\end{document}
+

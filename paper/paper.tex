@@ -1,0 +1,205 @@
+\documentclass{bcsj}
+
+% --- パッケージの読み込み ---
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{amsmath}  % 数式環境に必要
+
+% \graphicspath{{output/}}
+
+% --- ここから論文情報を記述 ---
+
+% 日本語情報
+\title{状態空間モデルを用いた日本国内の宅配便取扱数における構造変化分析} 
+\author{寺嶋風雅%
+  \affil{中央大学大学院 理工学研究科\email{a21. gn8t@g. chuo-u. ac. jp}}}
+
+% 英語情報
+\etitle{Structural Change Analysis of Parcel Delivery Volume in Japan Using State-Space Models} 
+\eauthor{Fuga Terashima%
+  \affil{Graduate School of Science and Engineering, Chuo University}}
+  
+% キーワード (英語で3?6個程度)
+\keyword{state-space model, structural change, time series analysis, COVID-19, logistics}
+
+% --- ここまでが論文情報 ---
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+本研究は, 状態空間モデルを用いて, 日本国内の宅配便取扱個数の月次データ（2002年4月～2022年7月）における変動要因の分離と定量化を行った. 
+先行研究ではSARIMAモデルが用いられたが, 運賃値上げやコロナ渦のパンデミックといった外部イベントが需要に与えたインパクトを数値として分離・評価するには限界があった. 
+そこで本研究では, ローカル線形トレンドと季節性に加え, 2017年の運賃値上げと新型コロナウイルス感染症（COVID-19）のパンデミックを外部イベントとして考慮した, 
+複数の状態空間モデルを構築した. 
+
+客観的指標であるAICを用いたモデル比較の結果, 
+コロナ禍の影響を複数のフェーズ（構造変化, 第一波, 2021年の波）に分けて固定係数でモデル化した「フェーズ分けモデル」が最も優れたモデルとして採択された. 
+本研究は, 状態空間モデルの柔軟性を活用することで, 複雑な時系列データに潜む複数のイベント効果を, その性質に応じて適切に分離・評価できることを実証した. 
+これにより, 物流業界の動向をより正確に把握し, 将来の予測や政策決定に資することが期待される. 
+\end{abstract}
+
+\section{はじめに}
+近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している. 
+一方で, 『ラストワンマイル問題』に代表される労働力不足や, 燃料費の高騰といった多くの課題に直面しており, 
+物流の効率化と持続可能性の向上は喫緊の社会課題となっている. こうした背景から, 物流の動向を正確に把握し, 
+その変動要因を理解することは, 事業者および政策決定者にとって極めて重要である. 物流動向を把握する一つのアプローチとして, 
+時系列解析が有効である. この点に関して, 赤羽根(2024)による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
+SARIMAモデルを用いてその基本構造を分析した. この研究は, 運賃値上げなどのイベントがトレンドに影響を与えた可能性を示唆するなど, 重要な貢献をなした. 
+しかし, 先行研究で用いられたSARIMAモデルでは, 運賃値上げや, その後に発生した新型コロナウイルスのパンデミックといった外部イベントが, 
+需要に具体的にどれほどの量的インパクトを与えたのかを, 他の要因から分離して評価することは困難であった. そこで本研究では, 
+この課題を克服するため, 状態空間モデルを適用する. これにより, トレンドや季節性といった基本成分に加え, 複数の外部イベントが与えた影響を, 
+その性質に応じて統計的に分離・定量化することを目的とする. 
+本研究で使用したデータの原系列を図 \ref{fig:original_series} に示す. 
+\begin{figure}[htbp]
+  \centering
+  % TeXファイルからの相対パスを直接, すべて記述する
+  \includegraphics[width=0.5\textwidth]{../output/originalseries.png}
+  \caption{宅配便取扱個数の原系列}
+  \label{fig:original_series}
+\end{figure}
+
+
+\section{分析手法} 
+\subsection{使用データ} % ← ここに新しいサブセクションを追加
+
+本研究で使用するデータは, 国土交通省が公表する「交通関係統計資料」から取得した, 2002年4月から2022年7月までの月次データである. 
+先行研究（赤羽根, 2024）において構築されたデータセットを利用した. 
+主要な変数を表\ref{tab:data_columns}に示す. 
+
+\begin{table}[htbp]
+  \centering
+  \caption{主要変数一覧}
+  \label{tab:data_columns}
+  % \resizeboxでtabular環境を囲む
+  \resizebox{0.5\textwidth}{!}{%
+    \begin{tabular}{ll}
+      \hline
+      カラム名 & 内容 \\
+      \hline
+      \texttt{label} & 年月 (YYYY-MM-DD) \\
+      \texttt{year} & 年 \\
+      \texttt{month} & 月 \\
+      \texttt{Transport\_tonnage} & 輸送トン数（トン） \\
+      \texttt{number\_parcels} & 宅配便取扱個数（千個） \\
+      \texttt{Number\_companies\_1} & 輸送トン数の調査会社数（社） \\
+      \texttt{Number\_companies\_2} & 宅配便取扱個数の調査会社数（社） \\
+      \hline
+    \end{tabular}%
+  }
+\end{table}
+
+変動を安定させるため, 本分析の目的変数には, \texttt{number\_parcels}の自然対数を取った値を用いた.
+\subsection{分析モデル}
+本研究で用いた状態空間モデルは, 以下のシステムモデルおよび観測モデルによって表現される. 
+
+\begin{align}
+    x_t &= F_t x_{t-1} + G_t \eta_{t} \label{eq:system_model} \\
+    y_t &= H_t x_t + \beta d_t + \epsilon_t \label{eq:observation_model}
+\end{align}
+
+ここで, $x_t$は状態ベクトル, $y_t$は観測値を表す. 
+状態攪乱項 $\eta_t$ および観測攪乱項 $\epsilon_t$ は, それぞれ以下の正規分布に従うと仮定する. 
+
+\begin{equation}
+    \begin{bmatrix}
+      \eta_{\mu_{t}}  \\
+      \eta_{\gamma_{t}}
+    \end{bmatrix}
+    \sim N \left( 0, 
+    \begin{bmatrix}
+      \sigma_{\mu_{t}}^2 & 0  \\
+      0 & \sigma_{\gamma_{t}}^2
+    \end{bmatrix} \right) \label{eq:eta_dist}
+\end{equation}
+
+\begin{equation}
+    \epsilon_t \sim N( 0, \sigma_{\epsilon_{t}}^2) \label{eq:epsilon_dist}
+\end{equation}
+
+ここで、状態ベクトル$x_t$は、トレンド成分と周期12の季節成分から構成される。
+具体的には、状態ベクトル$x_t$、遷移行列$F_t$、観測ベクトル$H_t$は、それぞれ以下のように定義される。
+
+% ↓ ここからが具体的な行列の定義
+\begin{align}
+    x_t &= 
+    \begin{bmatrix}
+        \mu_t \\      % トレンドの水準
+        \delta_t \\    % トレンドの傾き
+        \gamma_t \\    % 現在の季節効果
+        \gamma_{t-1} \\ % 過去の季節効果1
+        \vdots \\
+        \gamma_{t-10}  % 過去の季節効果10
+    \end{bmatrix}
+    , \\ % 改行したい場所に\\を置く
+    F_t &= 
+    \begin{bmatrix}
+        1 & 1 & 0 & \dots & 0 \\
+        0 & 1 & 0 & \dots & 0 \\
+        0 & 0 & -1 & \dots & -1 \\
+        0 & 0 & 1 & \dots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & 0 & \dots & 0
+    \end{bmatrix}
+    , \\
+    H_t &= 
+    \begin{bmatrix}
+        1 & 0 & 1 & 0 & \dots & 0
+    \end{bmatrix}
+\end{align}
+
+\subsection{外生変数の設計}
+本研究で用いる状態空間モデルは、トレンドや季節性といった内部構造に加え、外部からのイベントが時系列に与える影響を分離して分析できる点が特徴である。
+ここでは、観測方程式に組み込む外生変数$d_t$
+ の具体的な設計について述べる。
+
+宅配便の取扱個数は、社会・経済情勢の変化に敏感に反応すると考えられる。
+特に、分析対象期間中には、業界全体に影響を及ぼした大規模な運賃値上げと、
+人々の生活様式を大きく変容させた新型コロナウイルス感染症（COVID-19）のパンデミックという2つの重要なイベントが発生した。
+これらの影響を適切にモデル化するため、本研究ではイベントの性質に応じて期間を設定したダミー変数を設計し、外生変数として導入する。
+各ダミー変数は、イベントが発生している期間は1、それ以外の期間は0をとるバイナリ変数である。
+モデルは、これらの変数に対する係数$\beta$を推定することで、各イベントが宅配便取扱個数に与えた瞬間的なインパクトの大きさを定量的に評価する。
+具体的な変数設計は表\ref{tab:dummy_variables}に示す通りである。
+\begin{table}[htbp]
+  \centering
+  \caption{外生変数として導入するダミー変数一覧}
+  \label{tab:dummy_variables}
+  \resizebox{\textwidth}{!}{
+    \begin{tabular}{llp{11cm}}
+      \hline
+      変数名 & 対象期間 & 説明 \\
+      \hline
+      \texttt{hike\_dummy} & 2017/10 -- 2019/12 & 2017年10月に実施された主要各社の運賃値上げの影響を捉えるための変数。 \\
+      \texttt{covid\_main} & 2020/03 -- & COVID-19パンデミックによる巣ごもり需要の定着など、市場構造そのものに与えた持続的な変化（構造変化）を捉える変数。 \\
+      \texttt{covid\_wave1} & 2020/04 -- 2020/05 & 緊急事態宣言下での急激な需要増など、パンデミック初期の短期的なインパクトを捉える変数。 \\
+      \texttt{covid\_2021} & 2021/01 -- 2021/09 & 感染再拡大に伴う断続的な需要増の影響を捉える変数。 \\
+      \hline
+    \end{tabular}%
+  }
+\end{table}
+\section{分析結果}
+(ここに得られた結果（図や表）を客観的に記述します. AICの比較表や, 最終モデルのパラメータ推定結果, 分解グラフなど. . . )
+
+\section{考察}
+(ここに結果が何を意味するのかを解釈します. 「コロナ第一波のインパクトはなぜ突出していたか」など, 私たちの議論を文章化します. )
+
+\section{おわりに}
+(ここに研究全体の結論と, 今後の展望を記述します. )
+
+
+% === 本文ここまで ===
+
+
+\begin{acknowledgement}
+本研究の基盤となる時系列データの構築にあたり, 機械学習研究室の赤羽根悠悟氏（2024年度卒業）が作成されたデータを活用させていただきました. ここに記して, 深く感謝の意を表します. 
+\end{acknowledgement}
+
+\begin{thebibliography}{}
+\end{thebibliography}
+
+\begin{eabstract}
+(ここに英語の要旨を記述します. 日本語要旨より少し詳しく書くのが一般的です. )
+\end{eabstract}
+
+\end{document}
