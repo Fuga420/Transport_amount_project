@@ -3,13 +3,20 @@
 % --- パッケージの読み込み ---
 \usepackage[dvipdfmx]{graphicx}
 \usepackage{amsmath}  % 数式環境に必要
+\usepackage{float} % 場所の強制配置
+\usepackage{subcaption} % 2枚の図を横に並べる
+\usepackage{setspace} % 行間調整
+\usepackage{titlesec} % セクションタイトルの調整
+\usepackage{indentfirst} % 1段落目の字下げ
+\usepackage{enumitem} % 箇条書きの調整
+\usepackage{makecell}
 
 % \graphicspath{{output/}}
 
 % --- ここから論文情報を記述 ---
 
 % 日本語情報
-\title{状態空間モデルを用いた日本国内の宅配便取扱数における構造変化分析} 
+\title{状態空間モデルを用いた\\日本国内のトラック輸送量における時系列分析} 
 \author{寺嶋風雅%
   \affil{中央大学大学院 理工学研究科\email{a21. gn8t@g. chuo-u. ac. jp}}}
 
@@ -209,7 +216,41 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
   \end{tabular}
 \end{table}
 
-\subsection{最終モデルの推定結果}
+\subsection{提案モデルの推定結果}
+提案モデルのパラメータ推定結果を表\ref{tab:final_model_params}に示す. 
+なお, 各モデルのパラメータ推定にあたっては初期値依存を避け安定した解を得るため, 複数の初期値候補によるグリッドサーチによって最尤解を探索した.
+\begin{table}[H]
+  \centering
+  \caption{提案モデルのパラメータ推定結果}
+  \label{tab:final_model_params}
+  \footnotesize
+  % \resizebox を削除
+  % ↓ ヘッダーを makecell で改行し、p値を数式モードにする
+  \begin{tabular}{lrrc}
+    \hline
+    パラメータ & \multicolumn{1}{c}{\makecell{推定値 \\ (coef)}} 
+             & \multicolumn{1}{c}{\makecell{標準誤差 \\ (std err)}} 
+             & \makecell{p値 \\ ($P>|z|$)} \\
+    \hline
+    \multicolumn{4}{l}{\textit{外生変数効果}} \\
+    % ↓ _ を \ (バックスラッシュ) でエスケープする
+    \texttt{hike\_effect} & -0.023 & 0.031 & 0.464 \\
+    \texttt{covid\_main\_effect} & 0.049 & 0.040 & 0.222 \\
+    \texttt{covid\_wave1\_effect} & 0.045 & 0.026 & 0.077 \\
+    \texttt{covid\_2021\_effect} & 0.020 & 0.015 & 0.184 \\
+    \hline
+    \multicolumn{4}{l}{\textit{分散パラメータ}} \\
+    観測ノイズ ($\sigma_{\epsilon}^2$) & 0.0003 & 4.35e-05 & 0.000 \\
+    トレンドノイズ ($\sigma_{\mu}^2$) & 8.66e-05 & 2.29e-05 & 0.000 \\
+    傾きノイズ ($\sigma_{\delta}^2$) & 2.46e-11 & 2.61e-08 & 0.999 \\
+    季節ノイズ ($\sigma_{\gamma}^2$) & 5.30e-05 & 1.63e-05 & 0.001 \\
+    \hline
+  \end{tabular}
+  % \resizebox の閉じ括弧も削除
+\end{table}
+
+表\ref{tab:final_model_params}から, コロナ禍第一波の効果（\texttt{covid\_wave1\_effect}）の係数が約0.045であり, 10\%水準で統計的に有意であったことが確認できる（p=0.077）. 
+これは, 最初の緊急事態宣言下において, 他の要因に加えて約4.5\%の追加的な需要増があったことを示唆している. 
 % ここに, 最終モデルのサマリー表（各係数の推定値やp値）を載せ, 
 % 統計的に有意だった効果などを文章でハイライトします. 
 
@@ -217,12 +258,18 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
 % ここに, 最終モデルによる分解グラフを載せ, 
 % トレンドや季節性, イベント効果がどのように現れているかを視覚的に説明します. 
 提案モデルによる分解結果を \ref{fig:Decomposition_series} に示す. 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\textwidth]{../output/Decomposition.png}
   \caption{提案モデルによる時系列成分の分解}
   \label{fig:Decomposition_series}
 \end{figure}
+図\ref{fig:Decomposition_series}上段の観測値とフィット値の比較から, モデルが実際のデータの変動を非常によく捉えていることがわかる. 
+中段のトレンド成分は, 分析期間を通して一貫した上昇傾向にあるが, 2008年や2014年付近で一時的な成長の鈍化が見られる. 
+下段の季節成分は, 毎年夏に減少し冬に増加する, 安定した周期変動を示している. 
+上段の外部イベント効果を見ると, コロナ禍第一波の期間に, 他のイベントよりも顕著な正のインパクトが瞬間的に発生していることが視覚的に確認できる. 
+下段の残差は, 全体として特定のパターンを持たないランダムな変動となっており, モデルがデータの主要な構造を十分に捉えられていることを示唆している. 
+
 \section{考察}
 (ここに結果が何を意味するのかを解釈します. 「コロナ第一波のインパクトはなぜ突出していたか」など, 私たちの議論を文章化します. )
 
