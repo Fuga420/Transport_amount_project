@@ -17,8 +17,19 @@
 
 % 日本語情報
 \title{状態空間モデルを用いた\\日本国内のトラック輸送量における時系列分析} 
-\author{寺嶋風雅%
-  \affil{中央大学大学院 理工学研究科\email{a21. gn8t@g. chuo-u. ac. jp}}}
+\author{
+  寺嶋風雅%
+  \affil{中央大学大学院 理工学研究科\email{a21. gn8t@g. chuo-u. ac. jp}}
+  \and
+  赤羽根悠悟%
+  \affil{中央大学理工学部}
+  \and
+  冬木拓実%
+  \affil{中央大学大学院 理工学研究科}
+  \and
+  樋口知之%
+  \affil{指導教員}
+}
 
 % 英語情報
 \etitle{Structural Change Analysis of Parcel Delivery Volume in Japan Using State-Space Models} 
@@ -106,24 +117,22 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
     y_t &= H_t x_t + \beta d_t + \epsilon_t \label{eq:observation_model}
 \end{align}
 
-ここで, $x_t$は状態ベクトル, $y_t$は観測値を表す. 
-状態攪乱項 $\eta_t$ および観測攪乱項 $\epsilon_t$ は, それぞれ以下の正規分布に従うと仮定する. 
-
-\begin{equation}
+各攪乱項は, 互いに独立な正規分布に従うと仮定する. 
+\begin{align}
+    \eta_t &=
     \begin{bmatrix}
-      \eta_{\mu_{t}}  \\
-      \eta_{\gamma_{t}}
+      \eta_{\mu,t}  \\ % トレンド（レベル）ノイズ
+      \eta_{\delta,t} \\ % トレンド（傾き）ノイズ
+      \eta_{\gamma,t}  % 季節ノイズ
     \end{bmatrix}
     \sim N \left( 0, 
     \begin{bmatrix}
-      \sigma_{\mu_{t}}^2 & 0  \\
-      0 & \sigma_{\gamma_{t}}^2
-    \end{bmatrix} \right) \label{eq:eta_dist}
-\end{equation}
-
-\begin{equation}
-    \epsilon_t \sim N( 0, \sigma_{\epsilon_{t}}^2) \label{eq:epsilon_dist}
-\end{equation}
+      \sigma_{\mu}^2 & 0 & 0 \\
+      0 & \sigma_{\delta}^2 & 0 \\
+      0 & 0 & \sigma_{\gamma}^2
+    \end{bmatrix} \right) \label{eq:eta_dist} \\
+    \epsilon_t &\sim N( 0, \sigma_{\epsilon}^2) \label{eq:epsilon_dist}
+\end{align}
 
 ここで, 状態ベクトル$x_t$は, トレンド成分と周期12の季節成分から構成される. 
 具体的には, 状態ベクトル$x_t$, 遷移行列$F_t$, 観測ベクトル$H_t$は, それぞれ以下のように定義される. 
@@ -155,6 +164,10 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
         1 & 0 & 1 & 0 & \dots & 0
     \end{bmatrix}
 \end{align}
+
+ここで, $\mu_t$ は $t$ 時点のトレンドの水準, $\delta_t$ はトレンドの傾きを表す. 
+$\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-1, \dots, -1$）により, $\sum_{j=0}^{11} \gamma_{t-j} = 0$ という制約が課される. 
+モデルのパラメータ（分散 $\sigma^2$群および係数 $\beta$群）は, 最尤法によって推定される. 
 
 \subsection{外生変数の設計}
 本研究で用いる状態空間モデルは, トレンドや季節性といった内部構造に加え, 外部からのイベントが時系列に与える影響を分離して分析できる点が特徴である. 
@@ -201,10 +214,11 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
 \subsection{モデルの比較と選択}
 % ここに, AICの比較表などを載せ, なぜ最終モデルを選んだかを記述します. 
 % 例：「表Xに示す通り, 提案モデルのAICが最も低かったため, これを最終モデルとして採択する. 」
-\begin{table}[htbp]
+\begin{table}[H]
   \centering
   \caption{モデルの比較}
   \label{tab:model_comparison}
+  \small % ← この行を追加
   \begin{tabular}{lccc}
     \hline
     モデル & 対数尤度 & AIC & BIC \\
@@ -225,7 +239,7 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
   \label{tab:final_model_params}
   \footnotesize
   % \resizebox を削除
-  % ↓ ヘッダーを makecell で改行し、p値を数式モードにする
+  % ↓ ヘッダーを makecell で改行し, p値を数式モードにする
   \begin{tabular}{lrrc}
     \hline
     パラメータ & \multicolumn{1}{c}{\makecell{推定値 \\ (coef)}} 
@@ -271,22 +285,47 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
 下段の残差は, 全体として特定のパターンを持たないランダムな変動となっており, モデルがデータの主要な構造を十分に捉えられていることを示唆している. 
 
 \section{考察}
-(ここに結果が何を意味するのかを解釈します. 「コロナ第一波のインパクトはなぜ突出していたか」など, 私たちの議論を文章化します. )
+本分析が提示する重要な知見は, コロナ禍が宅配便需要に与えたインパクトが, 
+単一の現象ではなく「持続的なベースラインの上昇」という構造変化と, 「第一波における短期的な需要急増」
+というショックの複合であったと統計的に分離・定量化できた点にある. この複合的な性質の解明は, 
+先行研究のSARIMAモデルでは困難であり, 状態空間モデルの優位性を示すものである. 
+また, 本モデルは2017年の運賃値上げの影響が, コロナ禍のような巨大な変動を考慮すると統計的に有意でなかったことも示唆した. 
+さらに, イベントの性質による影響メカニズムの違いも明らかになった. リーマンショックがトレンド成長率の鈍化として現れた一方, 
+コロナ禍は需要水準自体の急激な変化として捉えられ, 状態空間モデルが多様なショックを表現できることを実証した. これは, 
+物流需要の動態をより深く理解する上で, 本モデルが強力な分析ツールであることを示している. 
 
 \section{おわりに}
-(ここに研究全体の結論と, 今後の展望を記述します. )
+本研究は, 状態空間モデルを日本の宅配便取扱個数データに適用し, 先行研究のSARIMAモデルでは困難であった外部イベント効果の分離・定量化を試みた. 
+その結果, 特にコロナ禍のインパクトが社会構造の変化を反映した持続的な需要の底上げと, 
+第一波における短期的な特需という, 性質の異なる複合的な現象であったことを統計的に解明した. 
+本研究で得られた知見は, 物流業界が直面する「ラストワンマイル問題」などの経営課題に対し, データに基づいた示唆を与えるものである. 
+例えば, 一時的な需要増と恒久的な構造変化を識別する本モデルの分析は, 
+事業者が行うべき投資（長期的な設備増強か, 短期的な人員配置の最適化か）の判断を支援する. 
+本研究では伝統的なアプローチを採用したが, 
+近年ではRamosら(2024)が提唱する「State Space Learning: SSL」という
+統計的機械学習を用いたアプローチも登場しており, 今後の応用が考えられる.  
 
 
 
 \begin{acknowledgement}
-本研究の基盤となる時系列データの構築にあたり, 機械学習研究室の赤羽根悠悟氏（2024年度卒業）が作成されたデータを活用させていただきました. ここに記して, 深く感謝の意を表します. 
 \end{acknowledgement}
 
 \begin{thebibliography}{}
 \end{thebibliography}
 
 \begin{eabstract}
-(ここに英語の要旨を記述します. 日本語要旨より少し詳しく書くのが一般的です. )
+This study utilizes state-space models (SSMs) to separate and quantify the factors influencing the monthly volume of parcel deliveries in Japan,
+ using data from April 2002 to July 2022. While prior research employed SARIMA models,
+  they faced limitations in isolating and quantifying the impact of external events—such as delivery fee hikes and the COVID-19 pandemic—on demand. Therefore, this study constructs multiple SSMs that incorporate a local linear trend and seasonality,
+   while also accounting for these external events.
+
+Based on model comparisons using the Akaike Information Criterion (AIC),
+ an objective indicator, a "phased model" was selected as superior.
+  This model treats the impact of the COVID-19 pandemic using fixed coefficients divided into multiple phases (e.g., structural change, the first wave, and the 2021 wave).
+   This research demonstrates that, by leveraging the flexibility of SSMs,
+    the effects of multiple events embedded in complex time series data can be appropriately separated
+     and evaluated according to their respective characteristics. These findings are expected to contribute to a more accurate
+      understanding of trends in the logistics industry and to inform future forecasting and policy-making.
 \end{eabstract}
 
 \end{document}
