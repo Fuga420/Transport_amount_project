@@ -19,7 +19,7 @@
 \title{状態空間モデルを用いた\\日本国内のトラック輸送量における時系列分析} 
 \author{
   寺嶋風雅%
-  \affil{中央大学大学院 理工学研究科\email{a21. gn8t@g. chuo-u. ac. jp}}
+  \affil{中央大学大学院 理工学研究科\email{a21.gn8t@g.chuo-u.ac.jp}}
   \and
   赤羽根悠悟%
   \affil{中央大学理工学部}
@@ -28,13 +28,24 @@
   \affil{中央大学大学院 理工学研究科}
   \and
   樋口知之%
-  \affil{指導教員}
+  \affil{中央大学理工学部}
 }
 
 % 英語情報
 \etitle{Structural Change Analysis of Parcel Delivery Volume in Japan Using State-Space Models} 
-\eauthor{Fuga Terashima%
-  \affil{Graduate School of Science and Engineering, Chuo University}}
+\eauthor{
+  Fuga Terashima%
+  \affil{Graduate School of Science and Engineering, Chuo University}
+  \and
+  Yugo Akahane%
+  \affil{Faculty of Science and Engineering, Chuo University}
+  \and
+  Takumi Fuyuki%
+  \affil{Graduate School of Science and Engineering, Chuo University}
+  \and
+  Tomoyuki Higuchi%
+  \affil{Faculty of Science and Engineering, Chuo University}
+}
   
 % キーワード (英語で3?6個程度)
 \keyword{state-space model, structural change, time series analysis, COVID-19, logistics}
@@ -63,7 +74,7 @@
 一方で, 『ラストワンマイル問題』に代表される労働力不足や, 燃料費の高騰といった多くの課題に直面しており, 
 物流の効率化と持続可能性の向上は喫緊の社会課題となっている. こうした背景から, 物流の動向を正確に把握し, 
 その変動要因を理解することは, 事業者および政策決定者にとって極めて重要である. 物流動向を把握する一つのアプローチとして, 
-時系列解析が有効である. この点に関して, 赤羽根(2024)による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
+時系列解析が有効である. この点に関して, \citet{akahane2024} による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
 SARIMAモデルを用いてその基本構造を分析した. この研究は, 運賃値上げなどのイベントがトレンドに影響を与えた可能性を示唆するなど, 重要な貢献をなした. 
 しかし, 先行研究で用いられたSARIMAモデルでは, 運賃値上げや, その後に発生した新型コロナウイルスのパンデミックといった外部イベントが, 
 需要に具体的にどれほどの量的インパクトを与えたのかを, 他の要因から分離して評価することは困難であった. そこで本研究では, 
@@ -306,11 +317,45 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
 統計的機械学習を用いたアプローチも登場しており, 今後の応用が考えられる.  
 
 
-
 \begin{acknowledgement}
 \end{acknowledgement}
 
-\begin{thebibliography}{}
+\begin{thebibliography}{99}
+  \setlength{\itemsep}{0pt}
+
+% \bibitem{key} を \bibitem[著者(年)]{key} の形式に変更
+% (著者が3名以上の場合は "et al." 
+
+\bibitem[赤羽根(2024)]{akahane2024}
+赤羽根 悠悟 (2024). 日本国内におけるトラック輸送量の時系列予測と分析. 中央大学理工学部卒業論文.
+
+\bibitem[Harvey(1990)]{harvey1990}
+Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
+
+\bibitem[Seabold \& Perktold(2010)]{seabold2010}
+Seabold, S., \& Perktold, J. (2010). Statsmodels: Econometric and statistical modeling with python. 
+In \textit{9th Python in Science Conference}.
+
+\bibitem[Alqatawna et al.(2023)]{alqatawna2023}
+Alqatawna, A., Abu-Salih, B., Obeid, N., \& Almiani, M. (2023). 
+Incorporating time-series forecasting techniques to predict logistics companies' staffing needs and order volume. 
+\textit{Computation}, \textit{11}(7), 141.
+
+\bibitem[Vališ et al.(2017)]{valis2017}
+D. Vališ, D. Mazurkiewicz, and M. Forbelská, 
+"Modelling of a Transport Belt Degradation Using State Space Model,"
+in \textit{IEEE International Conference on Industrial Engineering and Engineering Management (IEEM)}, 2017, pp. 136-140.
+
+\bibitem[Ghareeb(2023)]{ghareeb2023}
+Ghareeb, A. (2023).
+Time series forecasting of stock price for maritime shipping company in COVID-19 period using multi-step long short-term memory (LSTM) networks.
+In \textit{Proceedings of the 17th International Conference on Business Excellence 2023} (pp. 1728-1747).
+
+\bibitem[Ramos et al.(2024)]{ramos2024}
+Ramos, A., Valladão, D., \& Street, A. (2024). 
+\textit{Time Series Analysis by State Space Learning}. 
+arXiv preprint arXiv:2408.09120.
+
 \end{thebibliography}
 
 \begin{eabstract}
