@@ -16,7 +16,7 @@
 % --- ここから論文情報を記述 ---
 
 % 日本語情報
-\title{状態空間モデルを用いた\\日本国内のトラック輸送量における時系列分析} 
+\title{状態空間モデルを用いた日本国内\\トラック輸送量の外部要因の定量的把握} 
 \author{
   寺嶋風雅%
   \affil{中央大学大学院 理工学研究科}
@@ -58,9 +58,12 @@
 \maketitle
 
 \begin{abstract}
-本研究は, 状態空間モデルを用いて, 日本国内の宅配便取扱個数の月次データ（2002年4月～2022年7月）における変動要因の分離と定量化を行った. 
-先行研究ではSARIMAモデルが用いられたが, 運賃値上げやコロナ渦のパンデミックといった外部イベントが需要に与えたインパクトを数値として分離・評価するには限界があった. 
-そこで本研究では, ローカル線形トレンドと季節性に加え, 2017年の運賃値上げと新型コロナウイルス感染症（COVID-19）のパンデミックを外部イベントとして考慮した, 
+本研究は, 状態空間モデルを用いて, 日本国内の宅配便取扱個数の月次データ（2002年4月～2022年7月）における変動要因の分離と定量化を国内で初めて行った. 
+先行研究（赤羽根, 2024）では, SARIMA（Seasonal AutoRegressive Integrated Moving Average）モデルが採用された. 
+SARIMAモデルは, ARIMAモデルに季節周期的な変動を取り入れた手法であり, 
+過去のデータと誤差の相関構造を利用して高い予測精度を実現する. 
+しかし, このモデルでは運賃値上げやコロナ渦のパンデミックといった外的要因が需要に与えたインパクトを数値として分離・評価するには限界があった. 
+そこで本研究では, ローカル線形トレンドと季節性に加え, 2017年における主要各社の宅配便運賃値上げと新型コロナウイルス感染症（COVID-19）のパンデミックを外部イベントとして考慮した
 複数の状態空間モデルを構築した. 
 
 客観的指標であるAICを用いたモデル比較の結果, 
@@ -70,7 +73,7 @@
 \end{abstract}
 
 \section{はじめに}
-近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している. 
+近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している.
 一方で, 『ラストワンマイル問題』に代表される労働力不足や, 燃料費の高騰といった多くの課題に直面しており, 
 物流の効率化と持続可能性の向上は喫緊の社会課題となっている. こうした背景から, 物流の動向を正確に把握し, 
 その変動要因を理解することは, 事業者および政策決定者にとって極めて重要である. 物流動向を把握する一つのアプローチとして, 
@@ -163,12 +166,12 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
     , \\ % 改行したい場所に\\を置く
     F_t &= 
     \begin{bmatrix}
-        1 & 1 & 0 & \dots & 0 \\
-        0 & 1 & 0 & \dots & 0 \\
-        0 & 0 & -1 & \dots & -1 \\
-        0 & 0 & 1 & \dots & 0 \\
-        \vdots & \vdots & \vdots & \ddots & \vdots \\
-        0 & 0 & 0 & \dots & 0
+        1 & 1 & 0 & \dots & \dots & 0 \\
+        0 & 1 & 0 & \dots & \dots & 0 \\
+        0 & 0 & -1 & \dots & \dots & -1 \\
+        0 & 0 & 1 & 0 & \dots & 0 \\
+        \vdots & \vdots & & \ddots & \ddots & \vdots \\
+        0 & 0 & 0 & \dots & 1 & 0
     \end{bmatrix}
     , \\
     H_t &= 
@@ -180,6 +183,23 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
 ここで, $\mu_t$ は $t$ 時点のトレンドの水準, $\delta_t$ はトレンドの傾きを表す. 
 $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-1, \dots, -1$）により, $\sum_{j=0}^{11} \gamma_{t-j} = 0$ という制約が課される. 
 モデルのパラメータ（分散 $\sigma^2$群および係数 $\beta$群）は, 最尤法によって推定される. 
+
+観測方程式 \eqref{eq:observation_model} における外生変数項 $\beta d_t$ は, 運賃値上げおよびコロナ禍の各フェーズが与える影響の総和を表す. 
+係数ベクトル $\beta$ および ダミー変数ベクトル $d_t$ は, 具体的に以下のように定義される. 
+
+\begin{align}
+    \beta &= 
+    \begin{bmatrix}
+        \beta_{\mathrm{hike}} & \beta_{\mathrm{covid\_main}} & \beta_{\mathrm{covid\_wave1}} & \beta_{\mathrm{covid\_2021}}
+    \end{bmatrix} 
+    \label{eq:beta_def} \\
+    d_t &= 
+    \begin{bmatrix}
+        d_{\mathrm{hike}, t} & d_{\mathrm{covid\_main}, t} & d_{\mathrm{covid\_wave1}, t} & d_{\mathrm{covid\_2021}, t}
+    \end{bmatrix}^T
+    \label{eq:d_def}
+\end{align}
+外生変数項はこれらの内積 $\beta d_t$ として定義される. 
 
 \subsection{外生変数の設計}
 本研究で用いる状態空間モデルは, トレンドや季節性といった内部構造に加え, 外部からのイベントが時系列に与える影響を分離して分析できる点が特徴である. 
@@ -324,6 +344,7 @@ AICに基づき『提案モデル』を分析対象として採択した.
 これは, Eコマース市場の拡大という強力な上昇トレンド（図2）によって, 
 値上げによる仮に存在したであろう負の効果が相殺され, 統計的に検出できなくなった可能性が考えられる. 
 あるいは, そもそも宅配便需要の価格弾力性が低く, 値上げ幅が需要全体の変動に比べて小さかった可能性も示唆している. 
+
 さらに, イベントの性質による影響メカニズムの違いも明らかになった. 
 また, 先行研究（赤羽根, 2024）ではリーマンショック時期のトレンド成長率の鈍化が示唆されたが, 
 本モデルの推定結果では, 成長率自体の変化は検出されなかった. 
@@ -341,6 +362,7 @@ AICに基づき『提案モデル』を分析対象として採択した.
 その結果, 特にコロナ禍のインパクトが社会構造の変化を反映した持続的な需要の底上げと, 
 コロナ禍第一波における短期的な特需という, 複合的な現象である可能性をモデル化し, 特に短期的特需については統計的な有意性（p=0.077）を確認した. 
 本研究で得られた知見は, 物流業界が直面する「ラストワンマイル問題」などの経営課題に対し, データに基づいた示唆を与えるものである. 
+
 本モデルが示した持続的な構造変化と短期的なショックの分離は, 
 物流事業者の意思決定に直接的な示唆を与える. 前者は配送センターの新設といった長期的な設備投資の根拠となり得る一方, 
 後者は短期的な人員配置の最適化や一時的なアウトソーシングの判断材料となる. 
@@ -360,6 +382,12 @@ AICに基づき『提案モデル』を分析対象として採択した.
 
 \bibitem[赤羽根(2024)]{akahane2024}
 赤羽根 悠悟 (2024). 日本国内におけるトラック輸送量の時系列予測と分析. 中央大学理工学部卒業論文.
+
+\bibitem[北川(2005)]{kitagawa2005}
+北川 源四郎 (2005). 時系列解析入門. 岩波書店.
+
+\bibitem[国友(1985)]{kunitomo1985}
+国友 直人 (1985). 時系列モデル入門. 東京大学出版会.
 
 \bibitem[Harvey(1990)]{harvey1990}
 Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
@@ -387,6 +415,23 @@ In \textit{Proceedings of the 17th International Conference on Business Excellen
 Ramos, A., Valladão, D., \& Street, A. (2024). 
 \textit{Time Series Analysis by State Space Learning}. 
 arXiv preprint arXiv:2408.09120.
+
+% 価格弾力性の理論的定義
+\bibitem[Kaplan et al.(2011)]{kaplan2011}
+Kaplan, U., T{\"u}rkay, M., Karas{\"o}zen, B., \& Biegler, L. T. (2011).
+Optimization of supply chain systems with price elasticity of demand.
+\textit{INFORMS Journal on Computing}, 23(4), 557-568.
+
+% ラストワンマイル問題の文献
+\bibitem[Morganti et al.(2014)]{morganti2014}
+Morganti, E., Seidel, S., Blanquart, C., Dablanc, L., \& Lenz, B. (2014).
+The impact of e-commerce on final deliveries: alternative parcel delivery services in France and Germany.
+\textit{Transportation Research Procedia}, 4, 178-190.
+
+\bibitem[Vilko and Hallikas(2024)]{vilko2024}
+Vilko, J., \& Hallikas, J. (2024).
+Impact of COVID-19 on logistics sector companies.
+\textit{International Journal of Industrial Engineering and Operations Management}, 6(1), 25-42.
 
 \end{thebibliography}
 
