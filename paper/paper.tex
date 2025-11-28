@@ -254,9 +254,62 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
 その比較結果は次章で詳述する. 
 \section{分析結果}
 
+\subsection{予備的検討：STL分解と回帰分析}
+本分析に先立ち, 外部イベントの影響に関する予備的な検討として, 
+STL分解 (Seasonal-Trend decomposition using Loess) および重回帰分析を用いた検証を行った. 
+まず, 原系列（対数変換値）をSTL分解によりトレンド, 季節, 残差成分に分離した結果を図\ref{fig:stl_decomp}に示す. 
+
+
+
+
+% --------------------------------------------------
+% STL分解の結果図
+% --------------------------------------------------
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{../output/decomposition_STL.png} % 保存したファイル名
+  \caption{STL分解による時系列成分の分離}
+  \label{fig:stl_decomp}
+\end{figure}
+次に, この残差成分を目的変数とし, 2.3節で定義した4つのイベントダミー変数 (\texttt{hike\_dummy}, \texttt{covid\_main},
+ \texttt{covid\_wave1}, \texttt{covid\_2021}) を説明変数とした重回帰分析を行った. その結果を表\ref{tab:ols_result}に示す. 
+
+% --------------------------------------------------
+% 重回帰分析の結果表
+% --------------------------------------------------
+\begin{table}[H]
+  \centering
+  \caption{STL分解残差に対する重回帰分析の結果}
+  \label{tab:ols_result}
+  \footnotesize 
+  
+  \setlength{\tabcolsep}{6pt} 
+
+  \begin{tabular}{lrrcc}
+    \hline
+    % ヘッダー
+    パラメータ
+      & \multicolumn{1}{c}{\makecell{係数 \\ (coef)}} 
+      & \multicolumn{1}{c}{\makecell{標準誤差 \\ (std. err)}} 
+      & \multicolumn{1}{c}{\makecell{t値 \\ (t-val)}} 
+      & \makecell{p値 \\ ($P>|z|$)} \\ % ←短縮
+    \hline
+    Intercept         &  0.0029 & 0.0016 &  1.850 & 0.066 \\
+    \texttt{hike\_dummy} & -0.0060 & 0.0045 & -1.333 & 0.184 \\
+    \texttt{covid\_main} &  0.0097 & 0.0054 &  1.801 & 0.073 \\
+    \texttt{covid\_wave1}& 0.0667 & 0.0162 & 4.111 & 0.000 \\
+    \texttt{covid\_2021} & -0.0091 & 0.0089 & -1.021 & 0.309 \\
+    \hline
+    \multicolumn{5}{r}{($R^2=0.111, \text{Durbin-Watson}=1.377$)} \\
+  \end{tabular}
+\end{table}
+
+この結果は, 特定の期間（第一波）におけるショックが極めて強力であることを示唆している. 
+しかしながら, 本回帰モデルのDurbin-Watson比は $1.377$ であり, 残差に正の自己相関が残存していることが示唆される. 
+これは, 単純な回帰分析では時系列データの動的な構造を十分に制御できていない可能性を示しており, 
+次節以降で導入する状態空間モデルによる厳密なモデリングの必要性を裏付けるものである. 
+
 \subsection{モデルの比較と選択}
-% ここに, AICの比較表などを載せ, なぜ最終モデルを選んだかを記述します. 
-% 例：「表Xに示す通り, 提案モデルのAICが最も低かったため, これを最終モデルとして採択する. 」
 \begin{table}[H]
   \centering
   \caption{モデルの比較}
