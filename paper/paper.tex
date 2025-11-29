@@ -58,8 +58,8 @@
 \maketitle
 
 \begin{abstract}
-本研究は, 状態空間モデルを用いて, 日本国内の宅配便取扱個数の月次データ（2002年4月～2022年7月）における変動要因の分離と定量化を国内で初めて行った. 
-先行研究（赤羽根, 2024）では, SARIMA（Seasonal AutoRegressive Integrated Moving Average）モデルが採用された. 
+本研究は, 状態空間モデルを用いて日本国内の宅配便取扱個数の月次データ（2002年4月～2022年7月）における変動要因の分離と定量化を国内で初めて行った. 
+先行研究（赤羽根, 2024）では, SARIMA(Seasonal AutoRegressive Integrated Moving Averag)モデルが採用された. 
 SARIMAモデルは, ARIMAモデルに季節周期的な変動を取り入れた手法であり, 
 過去のデータと誤差の相関構造を利用して高い予測精度を実現する. 
 しかし, このモデルでは運賃値上げやコロナ渦のパンデミックといった外的要因が需要に与えたインパクトを数値として分離・評価するには限界があった. 
@@ -187,6 +187,10 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
 観測方程式 \eqref{eq:observation_model} における外生変数項 $\beta d_t$ は, 運賃値上げおよびコロナ禍の各フェーズが与える影響の総和を表す. 
 係数ベクトル $\beta$ および ダミー変数ベクトル $d_t$ は, 具体的に以下のように定義される. 
 
+{
+\small % 数式全体を少し小さくする（必要なければ削除可）
+\begingroup
+\setlength{\arraycolsep}{1.5pt} % 行列の列間隔を詰める（通常は5pt程度）
 \begin{align}
     \beta &= 
     \begin{bmatrix}
@@ -199,7 +203,9 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
     \end{bmatrix}^T
     \label{eq:d_def}
 \end{align}
-外生変数項はこれらの内積 $\beta d_t$ として定義される. 
+\endgroup
+}
+外生変数項はこれらの内積 $\beta d_t$ として定義される.
 
 \subsection{外生変数の設計}
 本研究で用いる状態空間モデルは, トレンドや季節性といった内部構造に加え, 外部からのイベントが時系列に与える影響を分離して分析できる点が特徴である. 
@@ -364,7 +370,7 @@ AICに基づき『提案モデル』を分析対象として採択した.
   % \resizebox の閉じ括弧も削除
 \end{table}
 
-表\ref{tab:final_model_params}から, コロナ禍第一波の効果（\texttt{covid\_wave1\_effect}）の係数が約0.045であり, 10\%水準で統計的に有意であったことが確認できる（p=0.077）. 
+表\ref{tab:final_model_params}から,コロナ禍第一波の効果（\texttt{covid\_wave1\_effect}）の係数が約0.045であり, 10\%水準で統計的に有意であったことが確認できる（p=0.077）. 
 これは, 最初の緊急事態宣言下において, 他の要因に加えて約4.5\%の追加的な需要増があったことを示唆している. 
 一方で, 2017年の運賃値上げ効果（\texttt{hike\_effect}, p=0.464）や, コロナ禍による持続的な構造変化（\texttt{covid\_main\_effect}, p=0.222）, 2021年の波（\texttt{covid\_2021\_effect}, p=0.184）については, 本モデルでは統計的に有意な水準の変化としては検出されなかった. 
 % 統計的に有意だった効果などを文章でハイライトします. 
@@ -393,7 +399,22 @@ AICに基づき『提案モデル』を分析対象として採択した.
 単一の現象ではなく「持続的なベースラインの上昇」という構造変化と, 「第一波における短期的な需要急増」
 というショックの複合であったと統計的に分離・定量化できた点にある. この複合的な性質の解明は, 
 先行研究のSARIMAモデルでは困難であり, 状態空間モデルの優位性を示すものである. 
-また, 本モデルは2017年の運賃値上げの影響が, コロナ禍のような巨大な変動を考慮すると統計的に有意でなかったことも示唆した. 
+
+また, 本研究ではモデルの頑健性を検証するため, 予備的検討としてSTL分解と重回帰分析を用いた比較検証を行った. 
+特筆すべきは, 異なるアプローチを用いたにもかかわらず, 
+「コロナ禍第一波 (\texttt{covid\_wave1}) のみが統計的に有意な正のインパクトを与え, 
+その他のイベント効果は有意ではない」という主要な結論が一致した点である. 
+このことは, 本研究で得られた知見が, 特定のモデル仕様に依存した結果ではなく, データそのものが有する頑健な特性であることを強く示唆している. 
+一方で, 両手法の結果には質的な差異も見られる. 
+単純な重回帰分析では \texttt{covid\_main}（構造変化）
+の$p$値が $0.073$ と10\%水準で有意に近い値を示したのに対し, 
+状態空間モデル（表4）では $0.222$ とより保守的な結果となった. 
+重回帰分析におけるDurbin-Watson比 ($1.377$) が示す通り, 単純なモデルでは残差の自己相関を考慮できないため, 
+標準誤差が過小評価され, $t$値が見かけ上高く算出されるバイアスが生じやすい. 
+これに対し, 状態空間モデルはトレンドや季節性の確率的な変動を明示的にモデル化することで, この自己相関の問題に対処している. 
+したがって, 状態空間モデルによる推定結果の方が統計的により信頼性が高く, コロナ禍の長期的な影響については慎重な解釈が必要であることを示している. 
+
+さらに, 本モデルは2017年の運賃値上げの影響が, コロナ禍のような巨大な変動を考慮すると統計的に有意でなかったことも示唆した. 
 これは, Eコマース市場の拡大という強力な上昇トレンド（図2）によって, 
 値上げによる仮に存在したであろう負の効果が相殺され, 統計的に検出できなくなった可能性が考えられる. 
 あるいは, そもそも宅配便需要の価格弾力性が低く, 値上げ幅が需要全体の変動に比べて小さかった可能性も示唆している. 
@@ -475,6 +496,12 @@ Kaplan, U., T{\"u}rkay, M., Karas{\"o}zen, B., \& Biegler, L. T. (2011).
 Optimization of supply chain systems with price elasticity of demand.
 \textit{INFORMS Journal on Computing}, 23(4), 557-568.
 
+% 価格弾力性の文献
+\bibitem[Oum et al.(1992)]{oum1992}
+Oum, T. H., Waters, W. G., \& Yong, J. S. (1992).
+Concepts of price elasticities of transport demand and recent empirical estimates. 
+\textit{Journal of Transport Economics and Policy}, 26(2), 139--154.
+
 % ラストワンマイル問題の文献
 \bibitem[Morganti et al.(2014)]{morganti2014}
 Morganti, E., Seidel, S., Blanquart, C., Dablanc, L., \& Lenz, B. (2014).
@@ -485,6 +512,46 @@ The impact of e-commerce on final deliveries: alternative parcel delivery servic
 Vilko, J., \& Hallikas, J. (2024).
 Impact of COVID-19 on logistics sector companies.
 \textit{International Journal of Industrial Engineering and Operations Management}, 6(1), 25-42.
+
+% 因果推論の文献
+\bibitem[Brodersen et al.(2015)]{brodersen2015} 
+Brodersen, K. H., Gallusser, F., Koehler, J., Remy, N., Scott, S. L. (2015). 
+Inferring causal impact using Bayesian structural time-series models. 
+\textit{The Annals of Applied Statistics}, 9(1), 247--274.
+
+% STL分解の論文
+\bibitem[Cleveland et al.(1990)]{cleveland1990}
+Cleveland, R. B., Cleveland, W. S., McRae, J. E., \& Terpenning, I. (1990).
+STL: A seasonal-trend decomposition procedure based on Loess. 
+\textit{Journal of Official Statistics}, 6(1), 3--73.
+
+\bibitem[Durbin and Koopman(2012)]{durbin2012}
+Durbin, J., \& Koopman, S. J. (2012). 
+\textit{Time series analysis by state space methods} (2nd ed.). Oxford University Press.
+
+% Prophetの論文
+\bibitem[Taylor and Letham(2018)]{taylor2018}
+Taylor, S. J., \& Letham, B. (2018).
+Forecasting at scale. 
+\textit{The American Statistician}, 72(1), 37--45.
+
+% 時系列予測の基礎理論
+\bibitem[Hyndman and Athanasopoulos(2021)]{hyndman2021}
+Hyndman, R. J., \& Athanasopoulos, G. (2021). 
+\textit{Forecasting: principles and practice} (3rd ed.).
+OTexts: Melbourne, Australia.
+
+% 物流の課題解決
+\bibitem[Wang et al.(2020)]{wang2020}
+\bibitem[Elsokkary et al.(2022)]{elsokkary2022}
+Elsokkary, N., Otrok, H., Singh, S., Mizouni, R., Barada, H., \& Omar, M. (2022).
+Crowdsourced last mile delivery: Collaborative workforce assignment. 
+\textit{SSRN Electronic Journal}.
+
+% DLと統計モデルの比較
+\bibitem[Lim and Zohren(2021)]{lim2021}
+Lim, B., \& Zohren, S. (2021). Time-series forecasting with deep learning: a survey. 
+\textit{Philosophical Transactions of the Royal Society A}, 379(2194), 20200209.
 
 \end{thebibliography}
 
