@@ -73,11 +73,12 @@ SARIMAモデルは, ARIMAモデルに季節周期的な変動を取り入れた�
 \end{abstract}
 
 \section{はじめに}
-近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している.
-一方で, 『ラストワンマイル問題』に代表される労働力不足や, 燃料費の高騰といった多くの課題に直面しており, 
+近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している (Morganti et al., 2014).
+一方で, 『ラストワンマイル問題』に代表される労働力不足(Elsokkary et al., 2022)や, 燃料費の高騰といった多くの課題に直面しており, 
 物流の効率化と持続可能性の向上は喫緊の社会課題となっている. こうした背景から, 物流の動向を正確に把握し, 
-その変動要因を理解することは, 事業者および政策決定者にとって極めて重要である. 物流動向を把握する一つのアプローチとして, 
-時系列解析が有効である. この点に関して, \citet{akahane2024} による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
+その変動要因を理解することは, 事業者および政策決定者にとって極めて重要であり、近年では
+物流需要や人員配置の最適化(Alqatawna et al., 2023)に向けた時系列予測の取り組みが進められている (e.g., Alqatawna et al., 2023).
+この点に関して, \citet{akahane2024} による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
 SARIMAモデルを用いてその基本構造を分析した. この研究は, 運賃値上げなどのイベントがトレンドに影響を与えた可能性を示唆するなど, 重要な貢献をなした. 
 しかし, 同研究ではイベントの外的要因の分離までは困難であり, 
 今後の展望として状態空間モデルの適用を提案していた . 
@@ -125,7 +126,7 @@ SARIMAモデルを用いてその基本構造を分析した. この研究は, �
 
 変動を安定させるため, 本分析の目的変数には, \texttt{number\_parcels}の自然対数を取った値を用いた.
 \subsection{分析モデル}
-本研究で用いた状態空間モデルは, 以下のシステムモデルおよび観測モデルによって表現される. 
+本研究で用いた状態空間モデル(国友, 1985 ; Kitagawa, 2005)は, 以下のシステムモデルおよび観測モデルによって表現される. 
 
 \begin{align}
     x_t &= F_t x_{t-1} + G_t \eta_{t} \label{eq:system_model} \\
@@ -256,13 +257,13 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
     を全て組み込んだ, 本研究における提案モデルである. 
 \end{itemize}
 
-これらの3モデルをそれぞれ推定し, モデルの当てはまりの良さを情報量規準AICによって評価した. 
+これらの3モデルをそれぞれ推定し, モデルの当てはまりの良さを情報量規準AIC(Akaike, 1974)によって評価した. 
 その比較結果は次章で詳述する. 
 \section{分析結果}
 
 \subsection{予備的検討：STL分解と回帰分析}
 本分析に先立ち, 外部イベントの影響に関する予備的な検討として, 
-STL分解 (Seasonal-Trend decomposition using Loess) および重回帰分析を用いた検証を行った. 
+STL分解 (Seasonal-Trend decomposition using Loess; Cleveland et al., 1990) および重回帰分析を用いた検証を行った. 
 なお, STL分解における平滑化パラメータ（季節成分およびトレンド成分）の決定にあたっては, 
 分解後の残差成分の標準偏差（RMSE）を最小化するグリッドサーチを実施した. 
 ここで, 単純にRMSEの最小化のみを目的関数とすると, アルゴリズムはトレンド窓幅を極小化し, 
@@ -343,6 +344,10 @@ AICに基づき『提案モデル』を分析対象として採択した.
 
 \subsection{提案モデルの推定結果}
 提案モデルのパラメータ推定結果を表\ref{tab:final_model_params}に示す. 
+本研究で提案する状態空間モデルのパラメータ推定には, PythonのライブラリであるStatsmodels (Seabold, Perktold, 2010) を用いた.
+具体的には, 同ライブラリの MLEModel クラスを継承して独自のクラスを構築し,
+ (2.5)～(2.9)式で定義した遷移行列および観測行列を実装することで,
+カルマンフィルタによる対数尤度の計算および最尤推定を行った.
 なお, 各モデルのパラメータ推定にあたっては初期値依存を避け安定した解を得るため, 複数の初期値候補によるグリッドサーチによって最尤解を探索した.
 \begin{table}[H]
   \centering
@@ -382,7 +387,7 @@ AICに基づき『提案モデル』を分析対象として採択した.
 \subsection{時系列の成分分解}
 % ここに, 最終モデルによる分解グラフを載せ, 
 % トレンドや季節性, イベント効果がどのように現れているかを視覚的に説明します. 
-提案モデルによる分解結果を \ref{fig:Decomposition_series} に示す. 
+提案モデルによる分解結果を図\ref{fig:Decomposition_series} に示す. 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.5\textwidth]{../output/Decomposition.png}
@@ -402,11 +407,15 @@ AICに基づき『提案モデル』を分析対象として採択した.
 下段の残差は, 全体として特定のパターンを持たないランダムな変動となっており, モデルがデータの主要な構造を十分に捉えられていることを示唆している. 
 
 \section{考察}
+\subsection{コロナ禍における需要変動の構造的解釈}
 本分析が提示する重要な知見は, コロナ禍が宅配便需要に与えたインパクトが, 
 単一の現象ではなく「持続的なベースラインの上昇」という構造変化と, 「第一波における短期的な需要急増」
 というショックの複合であったと統計的に分離・定量化できた点にある. この複合的な性質の解明は, 
 先行研究のSARIMAモデルでは困難であり, 状態空間モデルの優位性を示すものである. 
+コロナ禍がサプライチェーン全体に与えた混乱や構造変化については(Vilko, Hallikas, 2024) も指摘しており, 本モデルが捉えたベースラインの上昇は
+こうした世界的な傾向とも一致していると考えられる.
 
+\subsection{分析手法の比較とモデルの頑健性}
 また, 本研究ではモデルの頑健性を検証するため, 予備的検討としてSTL分解と重回帰分析を用いた比較検証を行った. 
 異なるアプローチを用いたが, 両手法ともに
 「コロナ禍第一波 (\texttt{covid\_wave1}) のみが統計的に有意な正のインパクトを与え, 
@@ -433,10 +442,12 @@ AICに基づき『提案モデル』を分析対象として採択した.
 結果として, 状態空間モデルの方がノイズやトレンドの変動をより厳密に分離でき, 
 これが外部イベントの影響評価における保守的かつ信頼性の高い結果につながったと解釈できる. 
 
+\subsection{運賃値上げの影響とその他の要因}
 さらに, 本モデルは2017年の運賃値上げの影響が, コロナ禍のような巨大な変動を考慮すると統計的に有意でなかったことも示唆した. 
 これは, Eコマース市場の拡大という強力な上昇トレンド（図2）によって, 
 値上げによる仮に存在したであろう負の効果が相殺され, 統計的に検出できなくなった可能性が考えられる. 
-あるいは, そもそも宅配便需要の価格弾力性が低く, 値上げ幅が需要全体の変動に比べて小さかった可能性も示唆している. 
+あるいは, そもそも宅配便需要の価格弾力性が低く (Oum et al., 1992; Kaplan et al., 2011), 
+値上げ幅が需要全体の変動に比べて小さかった可能性も示唆している.
 
 さらに, イベントの性質による影響メカニズムの違いも明らかになった. 
 また, 先行研究（赤羽根, 2024）ではリーマンショック時期のトレンド成長率の鈍化が示唆されたが, 
@@ -461,7 +472,8 @@ AICに基づき『提案モデル』を分析対象として採択した.
 後者は短期的な人員配置の最適化や一時的なアウトソーシングの判断材料となる. 
 本研究では伝統的なアプローチを採用したが, 
 近年ではRamosら(2024)が提唱する「State Space Learning: SSL」という
-統計的機械学習を用いたアプローチも登場しており, 今後の応用が考えられる.  
+統計的機械学習を用いたアプローチも登場しており, また深層学習を用いた予測手法 (Lim, Zohren, 2021) や大規模な加法モデル (Taylor, Letham, 2018) の活用も含め, 
+今後の応用が考えられる.  
 
 
 % \begin{acknowledgement}
@@ -482,17 +494,17 @@ AICに基づき『提案モデル』を分析対象として採択した.
 \bibitem[国友(1985)]{kunitomo1985}
 国友 直人 (1985). 時系列モデル入門. 東京大学出版会.
 
-\bibitem[姜(2025)]{kyo2025}
-姜興起 (2025). 現代 時系列解析: 移動線形モデルの方法と実践. 共立出版.
+% \bibitem[姜(2025)]{kyo2025}
+% 姜興起 (2025). 現代 時系列解析: 移動線形モデルの方法と実践. 共立出版.
 
 % AICの論文
 \bibitem[Akaike(1974)]{akaike1974}
 Akaike, H. (1974). A new look at the statistical model identification. 
 \textit{IEEE Transactions on Automatic Control}, 19(6), 716--723.
 
-\bibitem[Akaike(1980)]{akaike1980}
-Akaike, H. (1980). Likelihood and the Bayes procedure. 
-In Bernardo, J. M. et al. (eds.), \textit{Bayesian Statistics}, University Press, 143--166.
+% \bibitem[Akaike(1980)]{akaike1980}
+% Akaike, H. (1980). Likelihood and the Bayes procedure. 
+% In Bernardo, J. M. et al. (eds.), \textit{Bayesian Statistics}, University Press, 143--166.
 
 \bibitem[Harvey(1990)]{harvey1990}
 Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
@@ -506,15 +518,15 @@ Alqatawna, A., Abu-Salih, B., Obeid, N., \& Almiani, M. (2023).
 Incorporating time-series forecasting techniques to predict logistics companies' staffing needs and order volume. 
 \textit{Computation}, \textit{11}(7), 141.
 
-\bibitem[Vališ et al.(2017)]{valis2017}
-D. Vališ, D. Mazurkiewicz, and M. Forbelská, 
-"Modelling of a Transport Belt Degradation Using State Space Model,"
-in \textit{IEEE International Conference on Industrial Engineering and Engineering Management (IEEM)}, 2017, pp. 136-140.
+% \bibitem[Vališ et al.(2017)]{valis2017}
+% D. Vališ, D. Mazurkiewicz, and M. Forbelská, 
+% "Modelling of a Transport Belt Degradation Using State Space Model,"
+% in \textit{IEEE International Conference on Industrial Engineering and Engineering Management (IEEM)}, 2017, pp. 136-140.
 
-\bibitem[Ghareeb(2023)]{ghareeb2023}
-Ghareeb, A. (2023).
-Time series forecasting of stock price for maritime shipping company in COVID-19 period using multi-step long short-term memory (LSTM) networks.
-In \textit{Proceedings of the 17th International Conference on Business Excellence 2023} (pp. 1728-1747).
+% \bibitem[Ghareeb(2023)]{ghareeb2023}
+% Ghareeb, A. (2023).
+% Time series forecasting of stock price for maritime shipping company in COVID-19 period using multi-step long short-term memory (LSTM) networks.
+% In \textit{Proceedings of the 17th International Conference on Business Excellence 2023} (pp. 1728-1747).
 
 \bibitem[Ramos et al.(2024)]{ramos2024}
 Ramos, A., Valladão, D., \& Street, A. (2024). 
@@ -566,11 +578,11 @@ Taylor, S. J., \& Letham, B. (2018).
 Forecasting at scale. 
 \textit{The American Statistician}, 72(1), 37--45.
 
-% 時系列予測の基礎理論
-\bibitem[Hyndman and Athanasopoulos(2021)]{hyndman2021}
-Hyndman, R. J., \& Athanasopoulos, G. (2021). 
-\textit{Forecasting: principles and practice} (3rd ed.).
-OTexts: Melbourne, Australia.
+% % 時系列予測の基礎理論
+% \bibitem[Hyndman and Athanasopoulos(2021)]{hyndman2021}
+% Hyndman, R. J., \& Athanasopoulos, G. (2021). 
+% \textit{Forecasting: principles and practice} (3rd ed.).
+% OTexts: Melbourne, Australia.
 
 % 物流の課題解決
 \bibitem[Wang et al.(2020)]{wang2020}
