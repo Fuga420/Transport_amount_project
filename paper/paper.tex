@@ -220,7 +220,6 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
 これらの影響を適切にモデル化するため, 本研究ではイベントの性質に応じて期間を設定したダミー変数を設計し, 外生変数として導入する. 
 各ダミー変数は, イベントが発生している期間は1, それ以外の期間は0をとるバイナリ変数である. 
 モデルは, これらの変数に対する係数$\beta$を推定することで, 各イベントが宅配便取扱個数に与えた瞬間的なインパクトの大きさを定量的に評価する. 
-具体的な変数設計はに示す通りである. 
 本モデルで外生変数として導入するダミー変数は以下の通りである. 
 
 % description を itemize に変更
@@ -489,6 +488,10 @@ AICに基づき『提案モデル』を分析対象として採択した.
 % \bibitem{key} を \bibitem[著者(年)]{key} の形式に変更
 % (著者が3名以上の場合は "et al." 
 
+% --------------------------------------------------
+% 和文文献 (五十音順: あ -> わ)
+% --------------------------------------------------
+
 \bibitem[赤羽根(2024)]{akahane2024}
 赤羽根 悠悟 (2024). 日本国内におけるトラック輸送量の時系列予測と分析. 中央大学理工学部卒業論文.
 
@@ -504,6 +507,11 @@ AICに基づき『提案モデル』を分析対象として採択した.
 % \bibitem[姜(2025)]{kyo2025}
 % 姜興起 (2025). 現代 時系列解析: 移動線形モデルの方法と実践. 共立出版.
 
+
+% --------------------------------------------------
+% 欧文文献 (アルファベット順: A -> Z)
+% --------------------------------------------------
+
 % AICの論文
 \bibitem[Akaike(1974)]{akaike1974}
 Akaike, H. (1974). A new look at the statistical model identification. 
@@ -513,55 +521,10 @@ Akaike, H. (1974). A new look at the statistical model identification.
 % Akaike, H. (1980). Likelihood and the Bayes procedure. 
 % In Bernardo, J. M. et al. (eds.), \textit{Bayesian Statistics}, University Press, 143--166.
 
-% \bibitem[Harvey(1990)]{harvey1990}
-% Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
-
-\bibitem[Seabold \& Perktold(2010)]{seabold2010}
-Seabold, S., \& Perktold, J. (2010). Statsmodels: Econometric and statistical modeling with python. 
-In \textit{9th Python in Science Conference}.
-
 \bibitem[Alqatawna et al.(2023)]{alqatawna2023}
 Alqatawna, A., Abu-Salih, B., Obeid, N., \& Almiani, M. (2023). 
 Incorporating time-series forecasting techniques to predict logistics companies' staffing needs and order volume. 
 \textit{Computation}, \textit{11}(7), 141.
-
-% \bibitem[Vališ et al.(2017)]{valis2017}
-% D. Vališ, D. Mazurkiewicz, and M. Forbelská, 
-% "Modelling of a Transport Belt Degradation Using State Space Model,"
-% in \textit{IEEE International Conference on Industrial Engineering and Engineering Management (IEEM)}, 2017, pp. 136-140.
-
-% \bibitem[Ghareeb(2023)]{ghareeb2023}
-% Ghareeb, A. (2023).
-% Time series forecasting of stock price for maritime shipping company in COVID-19 period using multi-step long short-term memory (LSTM) networks.
-% In \textit{Proceedings of the 17th International Conference on Business Excellence 2023} (pp. 1728-1747).
-
-\bibitem[Ramos et al.(2024)]{ramos2024}
-Ramos, A., Valladão, D., \& Street, A. (2024). 
-\textit{Time Series Analysis by State Space Learning}. 
-arXiv preprint arXiv:2408.09120.
-
-% 価格弾力性の理論的定義
-\bibitem[Kaplan et al.(2011)]{kaplan2011}
-Kaplan, U., T{\"u}rkay, M., Karas{\"o}zen, B., \& Biegler, L. T. (2011).
-Optimization of supply chain systems with price elasticity of demand.
-\textit{INFORMS Journal on Computing}, 23(4), 557-568.
-
-% 価格弾力性の文献
-\bibitem[Oum et al.(1992)]{oum1992}
-Oum, T. H., Waters, W. G., \& Yong, J. S. (1992).
-Concepts of price elasticities of transport demand and recent empirical estimates. 
-\textit{Journal of Transport Economics and Policy}, 26(2), 139--154.
-
-% ラストワンマイル問題の文献
-\bibitem[Morganti et al.(2014)]{morganti2014}
-Morganti, E., Seidel, S., Blanquart, C., Dablanc, L., \& Lenz, B. (2014).
-The impact of e-commerce on final deliveries: alternative parcel delivery services in France and Germany.
-\textit{Transportation Research Procedia}, 4, 178-190.
-
-\bibitem[Vilko and Hallikas(2024)]{vilko2024}
-Vilko, J., \& Hallikas, J. (2024).
-Impact of COVID-19 on logistics sector companies.
-\textit{International Journal of Industrial Engineering and Operations Management}, 6(1), 25-42.
 
 % % 因果推論の文献
 % \bibitem[Brodersen et al.(2015)]{brodersen2015} 
@@ -579,11 +542,19 @@ STL: A seasonal-trend decomposition procedure based on Loess.
 Durbin, J., \& Koopman, S. J. (2012). 
 \textit{Time series analysis by state space methods} (2nd ed.). Oxford University Press.
 
-% Prophetの論文
-\bibitem[Taylor and Letham(2018)]{taylor2018}
-Taylor, S. J., \& Letham, B. (2018).
-Forecasting at scale. 
-\textit{The American Statistician}, 72(1), 37--45.
+% 物流の課題解決
+\bibitem[Elsokkary et al.(2022)]{elsokkary2022}
+Elsokkary, N., Otrok, H., Singh, S., Mizouni, R., Barada, H., \& Omar, M. (2022).
+Crowdsourced last mile delivery: Collaborative workforce assignment. 
+\textit{SSRN Electronic Journal}.
+
+% \bibitem[Ghareeb(2023)]{ghareeb2023}
+% Ghareeb, A. (2023).
+% Time series forecasting of stock price for maritime shipping company in COVID-19 period using multi-step long short-term memory (LSTM) networks.
+% In \textit{Proceedings of the 17th International Conference on Business Excellence 2023} (pp. 1728-1747).
+
+% \bibitem[Harvey(1990)]{harvey1990}
+% Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
 
 % % 時系列予測の基礎理論
 % \bibitem[Hyndman and Athanasopoulos(2021)]{hyndman2021}
@@ -591,17 +562,55 @@ Forecasting at scale.
 % \textit{Forecasting: principles and practice} (3rd ed.).
 % OTexts: Melbourne, Australia.
 
-% 物流の課題解決
-\bibitem[Wang et al.(2020)]{wang2020}
-\bibitem[Elsokkary et al.(2022)]{elsokkary2022}
-Elsokkary, N., Otrok, H., Singh, S., Mizouni, R., Barada, H., \& Omar, M. (2022).
-Crowdsourced last mile delivery: Collaborative workforce assignment. 
-\textit{SSRN Electronic Journal}.
+% 価格弾力性の理論的定義
+\bibitem[Kaplan et al.(2011)]{kaplan2011}
+Kaplan, U., T{\"u}rkay, M., Karas{\"o}zen, B., \& Biegler, L. T. (2011).
+Optimization of supply chain systems with price elasticity of demand.
+\textit{INFORMS Journal on Computing}, 23(4), 557-568.
 
 % DLと統計モデルの比較
 \bibitem[Lim and Zohren(2021)]{lim2021}
 Lim, B., \& Zohren, S. (2021). Time-series forecasting with deep learning: a survey. 
 \textit{Philosophical Transactions of the Royal Society A}, 379(2194), 20200209.
+
+% ラストワンマイル問題の文献
+\bibitem[Morganti et al.(2014)]{morganti2014}
+Morganti, E., Seidel, S., Blanquart, C., Dablanc, L., \& Lenz, B. (2014).
+The impact of e-commerce on final deliveries: alternative parcel delivery services in France and Germany.
+\textit{Transportation Research Procedia}, 4, 178-190.
+
+% 価格弾力性の文献
+\bibitem[Oum et al.(1992)]{oum1992}
+Oum, T. H., Waters, W. G., \& Yong, J. S. (1992).
+Concepts of price elasticities of transport demand and recent empirical estimates. 
+\textit{Journal of Transport Economics and Policy}, 26(2), 139--154.
+
+\bibitem[Ramos et al.(2024)]{ramos2024}
+Ramos, A., Valladão, D., \& Street, A. (2024). 
+\textit{Time Series Analysis by State Space Learning}. 
+arXiv preprint arXiv:2408.09120.
+
+\bibitem[Seabold \& Perktold(2010)]{seabold2010}
+Seabold, S., \& Perktold, J. (2010). Statsmodels: Econometric and statistical modeling with python. 
+In \textit{9th Python in Science Conference}.
+
+% Prophetの論文
+\bibitem[Taylor and Letham(2018)]{taylor2018}
+Taylor, S. J., \& Letham, B. (2018).
+Forecasting at scale. 
+\textit{The American Statistician}, 72(1), 37--45.
+
+% \bibitem[Vališ et al.(2017)]{valis2017}
+% D. Vališ, D. Mazurkiewicz, and M. Forbelská, 
+% "Modelling of a Transport Belt Degradation Using State Space Model,"
+% in \textit{IEEE International Conference on Industrial Engineering and Engineering Management (IEEM)}, 2017, pp. 136-140.
+
+\bibitem[Vilko and Hallikas(2024)]{vilko2024}
+Vilko, J., \& Hallikas, J. (2024).
+Impact of COVID-19 on logistics sector companies.
+\textit{International Journal of Industrial Engineering and Operations Management}, 6(1), 25-42.
+
+\bibitem[Wang et al.(2020)]{wang2020}
 
 \end{thebibliography}
 
