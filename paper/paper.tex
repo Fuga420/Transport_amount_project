@@ -74,9 +74,10 @@ SARIMAモデルは, ARIMAモデルに季節周期的な変動を取り入れた�
 
 \section{はじめに}
 近年, 日本の物流業界はEコマース市場の拡大に伴い, その重要性を増している (Morganti et al., 2014).
+国内のEC市場においても, 状態空間モデルを用いた大規模なセール効果の分析が行われるなど (富山ら, 2024), データに基づく市場動向の把握が進んでいる.
 一方で, 『ラストワンマイル問題』に代表される労働力不足(Elsokkary et al., 2022)や, 燃料費の高騰といった多くの課題に直面しており, 
 物流の効率化と持続可能性の向上は喫緊の社会課題となっている. こうした背景から, 物流の動向を正確に把握し, 
-その変動要因を理解することは, 事業者および政策決定者にとって極めて重要であり、近年では
+その変動要因を理解することは, 事業者および政策決定者にとって極めて重要であり, 近年では
 物流需要や人員配置の最適化(Alqatawna et al., 2023)に向けた時系列予測の取り組みが進められている (e.g., Alqatawna et al., 2023).
 この点に関して, \citet{akahane2024} による先行研究は, 国土交通省の統計から20年分の宅配便取扱個数の月次データを構築し, 
 SARIMAモデルを用いてその基本構造を分析した. この研究は, 運賃値上げなどのイベントがトレンドに影響を与えた可能性を示唆するなど, 重要な貢献をなした. 
@@ -264,6 +265,9 @@ $\gamma_t$ は現在の季節効果を示し, 遷移行列 $F_t$ の3行目（$-
 \subsection{予備的検討：STL分解と回帰分析}
 本分析に先立ち, 外部イベントの影響に関する予備的な検討として, 
 STL分解 (Seasonal-Trend decomposition using Loess; Cleveland et al., 1990) および重回帰分析を用いた検証を行った. 
+STL分解は, その汎用性の高さと外れ値に対する頑健性から, 
+時系列データの季節調整やトレンド抽出を行う際の標準的な手法として広く利用されている. 
+特に, データの全体的な構造を視覚的かつ直感的に把握する上では, 極めて手軽で強力なツールである. 
 なお, STL分解における平滑化パラメータ（季節成分およびトレンド成分）の決定にあたっては, 
 分解後の残差成分の標準偏差（RMSE）を最小化するグリッドサーチを実施した. 
 ここで, 単純にRMSEの最小化のみを目的関数とすると, アルゴリズムはトレンド窓幅を極小化し, 
@@ -440,7 +444,7 @@ AICに基づき『提案モデル』を分析対象として採択した.
 この手法では, トレンド自体の揺らぎを確率的に許容できるため, コロナ禍のような外的要因を
 分析者の主観的なパラメータ設定ではなく, 尤度という客観的な指標に基づいて評価できる. 
 結果として, 状態空間モデルの方がノイズやトレンドの変動をより厳密に分離でき, 
-これが外部イベントの影響評価における保守的かつ信頼性の高い結果につながったと解釈できる. 
+これが外部イベントの影響評価における保守的かつ信頼性の高い結果につながったと解釈できる.(Durbin, Koopman, 2012)
 
 \subsection{運賃値上げの影響とその他の要因}
 さらに, 本モデルは2017年の運賃値上げの影響が, コロナ禍のような巨大な変動を考慮すると統計的に有意でなかったことも示唆した. 
@@ -494,6 +498,9 @@ AICに基づき『提案モデル』を分析対象として採択した.
 \bibitem[国友(1985)]{kunitomo1985}
 国友 直人 (1985). 時系列モデル入門. 東京大学出版会.
 
+\bibitem[富山ら(2024)]{tomiyama2024}
+富山 貴史, 瀬貫 雄介, 菊池 明飛, Sun Shurong, 北原 知就, 伊豆永 洋一 (2024). 状態空間モデルを用いたECサイトにおけるセール効果の分析. 計算機統計学, 37(1), 43--52.
+
 % \bibitem[姜(2025)]{kyo2025}
 % 姜興起 (2025). 現代 時系列解析: 移動線形モデルの方法と実践. 共立出版.
 
@@ -506,8 +513,8 @@ Akaike, H. (1974). A new look at the statistical model identification.
 % Akaike, H. (1980). Likelihood and the Bayes procedure. 
 % In Bernardo, J. M. et al. (eds.), \textit{Bayesian Statistics}, University Press, 143--166.
 
-\bibitem[Harvey(1990)]{harvey1990}
-Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
+% \bibitem[Harvey(1990)]{harvey1990}
+% Harvey, A. C. (1990). \textit{Forecasting, structural time series models and the Kalman filter}. Cambridge university press.
 
 \bibitem[Seabold \& Perktold(2010)]{seabold2010}
 Seabold, S., \& Perktold, J. (2010). Statsmodels: Econometric and statistical modeling with python. 
@@ -556,11 +563,11 @@ Vilko, J., \& Hallikas, J. (2024).
 Impact of COVID-19 on logistics sector companies.
 \textit{International Journal of Industrial Engineering and Operations Management}, 6(1), 25-42.
 
-% 因果推論の文献
-\bibitem[Brodersen et al.(2015)]{brodersen2015} 
-Brodersen, K. H., Gallusser, F., Koehler, J., Remy, N., Scott, S. L. (2015). 
-Inferring causal impact using Bayesian structural time-series models. 
-\textit{The Annals of Applied Statistics}, 9(1), 247--274.
+% % 因果推論の文献
+% \bibitem[Brodersen et al.(2015)]{brodersen2015} 
+% Brodersen, K. H., Gallusser, F., Koehler, J., Remy, N., Scott, S. L. (2015). 
+% Inferring causal impact using Bayesian structural time-series models. 
+% \textit{The Annals of Applied Statistics}, 9(1), 247--274.
 
 % STL分解の論文
 \bibitem[Cleveland et al.(1990)]{cleveland1990}
