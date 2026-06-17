@@ -20,6 +20,12 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import numpy as np
 import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 
 from src.data_loader import load_transport_data
 from src.features import get_default_event_config, prepare_event_data
@@ -111,6 +117,12 @@ PARAMETER_LABELS = {
     "covid_main_effect": "COVID main effect",
     "covid_wave1_effect": "First COVID wave effect",
     "covid_2021_effect": "2021 COVID effect",
+}
+
+EVENT_SHADING = {
+    "hike_dummy": ("2017-10-01", "2019-12-01", 0.10),
+    "covid_wave1": ("2020-04-01", "2020-05-01", 0.20),
+    "covid_2021": ("2021-01-01", "2021-09-01", 0.15),
 }
 
 
@@ -526,6 +538,176 @@ def build_final_model_fit_summary(
     )
 
 
+def add_event_shading(ax, df: pd.DataFrame) -> None:
+    """Add light event-period shading to a time-series axis."""
+    for _name, (start, end, alpha) in EVENT_SHADING.items():
+        ax.axvspan(
+            pd.Timestamp(start),
+            pd.Timestamp(end),
+            color="gray",
+            alpha=alpha,
+            zorder=-1,
+        )
+
+
+def format_date_axis(ax) -> None:
+    """Format a date axis for paper figures."""
+    ax.xaxis.set_major_locator(mdates.YearLocator(base=4))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.grid(True, color="0.80", linewidth=0.8)
+
+
+def compute_model_components(
+    result,
+    df: pd.DataFrame,
+    param_names: list[str],
+    exog_names: list[str],
+) -> dict:
+    """Compute fitted values and components for the canonical proposed model."""
+    param_map = dict(zip(param_names, np.asarray(result.params, dtype=float)))
+    trend = np.asarray(result.smoother_results.smoothed_state[0], dtype=float)
+    seasonal = np.asarray(result.smoother_results.smoothed_state[2], dtype=float)
+
+    effects = {}
+    total_event_effect = np.zeros(len(df), dtype=float)
+    for exog_name in exog_names:
+        param_name = EXOG_PARAM_NAME_OVERRIDES.get(exog_name, f"{exog_name}_effect")
+        effect = param_map[param_name] * df[exog_name].to_numpy(dtype=float)
+        effects[exog_name] = effect
+        total_event_effect += effect
+
+    fitted = trend + seasonal + total_event_effect
+    residual = df["y"].to_numpy(dtype=float) - fitted
+
+    return {
+        "trend": trend,
+        "seasonal": seasonal,
+        "effects": effects,
+        "total_event_effect": total_event_effect,
+        "fitted": fitted,
+        "residual": residual,
+    }
+
+
+def plot_original_series(df: pd.DataFrame, save_path: Path) -> None:
+    """Plot the raw parcel-volume series used in the paper overview figure."""
+    fig, ax = plt.subplots(figsize=(10.25, 5.25))
+    ax.plot(df.index, df["number_parcels"], color="black", linewidth=1.0, label="number_parcels")
+    ax.set_xlabel("date")
+    ax.set_ylabel("Parcel volume")
+    ax.legend(loc="upper left")
+    format_date_axis(ax)
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_decomposition_main(
+    df: pd.DataFrame,
+    components: dict,
+    save_path: Path,
+) -> None:
+    """Plot observed/fitted, trend, and seasonal components."""
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10, 8.6), sharex=True)
+
+    axes[0].plot(df.index, df["y"], color="dimgray", label="Observed", linewidth=0.8)
+    axes[0].plot(
+        df.index,
+        components["fitted"],
+        color="black",
+        linestyle="--",
+        label="Fitted",
+        linewidth=1.0,
+    )
+    axes[0].set_title("Observed vs. Fitted Values")
+    axes[0].legend(loc="upper left")
+
+    axes[1].plot(df.index, components["trend"], color="black", label="Trend", linewidth=1.0)
+    axes[1].set_title("Trend Component")
+    trend_min = float(np.min(components["trend"]))
+    trend_max = float(np.max(components["trend"]))
+    margin = (trend_max - trend_min) * 0.1
+    axes[1].set_ylim(trend_min - margin, trend_max + margin)
+
+    axes[2].plot(df.index, components["seasonal"], color="black", label="Seasonal", linewidth=0.8)
+    axes[2].set_title("Seasonal Component")
+    axes[2].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[2].set_xlabel("Date")
+
+    for ax in axes:
+        add_event_shading(ax, df)
+        ax.set_ylabel("Value (log)")
+        format_date_axis(ax)
+
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_decomposition_effects(
+    df: pd.DataFrame,
+    components: dict,
+    save_path: Path,
+) -> None:
+    """Plot event effects and residuals for the canonical proposed model."""
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(10, 5.6), sharex=True)
+
+    styles = {
+        "hike_dummy": "-.",
+        "covid_main": "--",
+        "covid_wave1": "-",
+        "covid_2021": ":",
+    }
+    for exog_name, effect in components["effects"].items():
+        axes[0].plot(
+            df.index,
+            effect,
+            color="black",
+            linestyle=styles.get(exog_name, "-"),
+            label=f"{EXOG_LABELS.get(exog_name, exog_name)} effect",
+            linewidth=1.0,
+        )
+
+    axes[0].set_title("External Event Effects")
+    axes[0].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[0].legend(loc="upper left")
+
+    axes[1].plot(df.index, components["residual"], color="black", linewidth=0.8, label="Residuals")
+    axes[1].set_title("Residuals")
+    axes[1].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[1].set_xlabel("Date")
+
+    for ax in axes:
+        add_event_shading(ax, df)
+        ax.set_ylabel("Value (log)")
+        format_date_axis(ax)
+
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def write_paper_figures(
+    df: pd.DataFrame,
+    result,
+    param_names: list[str],
+    exog_names: list[str],
+) -> list[Path]:
+    """Write the three primary paper figures to output/figures."""
+    components = compute_model_components(result, df, param_names, exog_names)
+    figure_paths = [
+        FIGURES_DIR / "original_series.png",
+        FIGURES_DIR / "decomposition_main.png",
+        FIGURES_DIR / "decomposition_effects.png",
+    ]
+
+    plot_original_series(df, figure_paths[0])
+    plot_decomposition_main(df, components, figure_paths[1])
+    plot_decomposition_effects(df, components, figure_paths[2])
+
+    return figure_paths
+
+
 def main() -> None:
     ensure_output_dirs()
 
@@ -571,9 +753,14 @@ def main() -> None:
     final_model_params.to_csv(TABLES_DIR / "final_model_params.csv", index=False)
     final_model_fit_summary.to_csv(TABLES_DIR / "final_model_fit_summary.csv", index=False)
     write_final_model_params_latex(final_model_params)
+    figure_paths = write_paper_figures(df, result, param_names, event_names)
 
     print("\nFinal model fit summary")
     print(final_model_fit_summary.to_string(index=False))
+
+    print("\nPaper figures")
+    for figure_path in figure_paths:
+        print(f"- {figure_path}")
 
     print("\nModel comparison")
     model_comparison = build_model_comparison(df, result)
@@ -581,7 +768,6 @@ def main() -> None:
     write_model_comparison_latex(model_comparison)
     print(model_comparison.to_string(index=False))
 
-    # TODO: Generate reproducible figures for paper_2.tex.
     # TODO: Save run metadata and diagnostics.
 
 
