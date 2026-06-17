@@ -23,6 +23,7 @@ import pandas as pd
 
 from src.data_loader import load_transport_data
 from src.features import get_default_event_config, prepare_event_data
+from src.ssm_models import LocalLinearTrendSeasonalWithMultiFixedExog
 from src.paths import (
     FIGURES_DIR,
     INTERMEDIATE_DIR,
@@ -42,6 +43,25 @@ KEY_COLUMNS = [
     "Number_companies_2",
     "y",
 ]
+
+BASE_PARAM_NAMES = [
+    "obs_error",
+    "level_noise",
+    "slope_noise",
+    "seasonal_noise",
+]
+
+COEFF_START_HINTS = {
+    "covid_main": -2.0,
+    "covid_wave1": -2.0,
+    "covid_2021": -3.0,
+}
+
+FINAL_MODEL_NAME = "proposed_phase_fixed_exog"
+
+EXOG_PARAM_NAME_OVERRIDES = {
+    "hike_dummy": "hike_effect",
+}
 
 
 def ensure_output_dirs() -> None:
@@ -111,6 +131,82 @@ def write_run_metadata(df: pd.DataFrame) -> None:
     )
 
 
+def build_start_params(exog_names: list[str]) -> list[float]:
+    """Build start params matching the notebook's final proposed model setup."""
+    init_variances = [0.01, 0.01, 0.001, 0.001]
+    init_coeffs = [COEFF_START_HINTS.get(name, 0.0) for name in exog_names]
+    return init_variances + init_coeffs
+
+
+def fit_final_model(
+    df: pd.DataFrame,
+    exog_data: list[pd.Series],
+    exog_names: list[str],
+):
+    """Fit the paper's proposed final model only."""
+    exog_param_names = [
+        EXOG_PARAM_NAME_OVERRIDES.get(name, f"{name}_effect")
+        for name in exog_names
+    ]
+    param_names = BASE_PARAM_NAMES + exog_param_names
+
+    model = LocalLinearTrendSeasonalWithMultiFixedExog(
+        endog=df["y"],
+        exog_list=exog_data,
+        param_names=param_names,
+        seasonal_period=12,
+    )
+
+    result = model.fit(
+        start_params=build_start_params(exog_names),
+        maxiter=1000,
+        disp=False,
+    )
+
+    return result, param_names
+
+
+def build_final_model_params(result, param_names: list[str]) -> pd.DataFrame:
+    """Build a parameter table from a fitted statsmodels result."""
+    estimates = np.asarray(result.params, dtype=float)
+    std_errors = np.asarray(result.bse, dtype=float)
+    z_values = np.asarray(result.zvalues, dtype=float)
+    p_values = np.asarray(result.pvalues, dtype=float)
+
+    return pd.DataFrame(
+        {
+            "parameter": param_names,
+            "estimate": estimates,
+            "std_error": std_errors,
+            "z_value": z_values,
+            "p_value": p_values,
+        }
+    )
+
+
+def build_final_model_fit_summary(
+    result,
+    df: pd.DataFrame,
+    exog_names: list[str],
+) -> pd.DataFrame:
+    """Build a one-row fit summary for the paper's final model."""
+    return pd.DataFrame(
+        [
+            {
+                "model_name": FINAL_MODEL_NAME,
+                "nobs": int(result.nobs),
+                "log_likelihood": float(result.llf),
+                "aic": float(result.aic),
+                "bic": float(result.bic),
+                "dependent_variable": "y",
+                "exog_variables": ",".join(exog_names),
+                "data_start": df.index.min().strftime("%Y-%m-%d"),
+                "data_end": df.index.max().strftime("%Y-%m-%d"),
+            }
+        ]
+    )
+
+
 def main() -> None:
     ensure_output_dirs()
 
@@ -125,7 +221,7 @@ def main() -> None:
     df = load_transport_data(str(MAIN_DATA_PATH))
 
     event_config = get_default_event_config()
-    df, _exog_data, event_names = prepare_event_data(df, event_config)
+    df, exog_data, event_names = prepare_event_data(df, event_config)
 
     data_summary = build_data_summary(df)
     event_dummy_summary = build_event_dummy_summary(df, event_names)
@@ -142,8 +238,24 @@ def main() -> None:
     print("\nEvent dummy summary")
     print(event_dummy_summary.to_string(index=False))
 
-    # TODO: Estimate baseline, simple-event, and proposed models.
-    # TODO: Export model comparison and parameter tables.
+    print("\nFinal model")
+    print(f"- Model name: {FINAL_MODEL_NAME}")
+    print("- State-space class: LocalLinearTrendSeasonalWithMultiFixedExog")
+    print("- Dependent variable: y")
+    print(f"- Exogenous variables: {', '.join(event_names)}")
+    print(f"- Estimation period: {df.index.min().strftime('%Y-%m-%d')} to {df.index.max().strftime('%Y-%m-%d')}")
+
+    result, param_names = fit_final_model(df, exog_data, event_names)
+    final_model_params = build_final_model_params(result, param_names)
+    final_model_fit_summary = build_final_model_fit_summary(result, df, event_names)
+
+    final_model_params.to_csv(TABLES_DIR / "final_model_params.csv", index=False)
+    final_model_fit_summary.to_csv(TABLES_DIR / "final_model_fit_summary.csv", index=False)
+
+    print("\nFinal model fit summary")
+    print(final_model_fit_summary.to_string(index=False))
+
+    # TODO: Estimate baseline and simple-event comparison models.
     # TODO: Generate reproducible figures for paper_2.tex.
     # TODO: Save run metadata and diagnostics.
 
