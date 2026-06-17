@@ -96,4 +96,14 @@ $$
 
 ```bash
 pip install -r requirements.txt
+```
 
+### 6.2. 再現可能な分析の実行方法
+
+再現可能な分析パイプラインの入口として、以下を実行する。
+
+```bash
+python scripts/run_analysis.py
+```
+
+現時点では Phase 1 の雛形であり、最終分析・モデル推定・論文用成果物の生成はまだ実装途中である。
