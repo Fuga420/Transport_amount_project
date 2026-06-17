@@ -47,4 +47,7 @@ output/html/*
 *.fls
 *.fdb_latexmk
 
+# Generated analysis tables
+output/tables/*.csv
+
 # PDF file
