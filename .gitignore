@@ -43,6 +43,7 @@ output/html/*
 *.lot
 *.bbl
 *.blg
+*.dvi
 *.fls
 *.fdb_latexmk
 
