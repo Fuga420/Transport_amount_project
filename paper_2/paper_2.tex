@@ -210,58 +210,24 @@
 \section{分析結果}
 \subsection{モデルの比較と選択}
 2.4節で定義した3つのモデルを推定し, 対数尤度, AIC, BICを算出した. 
-結果を表\ref{tab:model_comparison}に示す. 
-\begin{table}[H]
-  \centering
-  \caption{モデルの比較}
-  \label{tab:model_comparison}
-  \small
-  \begin{tabular}{lccc}
-    \hline
-    モデル & 対数尤度 & AIC & BIC \\
-    \hline
-    1. ベースラインモデル & 471.9 & -913.9 & -861.4 \\
-    2. 単純イベントモデル & 477.5 & -915.0 & -855.1 \\
-    \textbf{3. 提案モデル} & \textbf{480.9} & \textbf{-919.9} & \textbf{-846.4} \\
-    \hline
-  \end{tabular}
-\end{table}
+結果を表\ref{tab:model-comparison}に示す. 
+% 旧手入力表は再現性確保のため, scripts/run_analysis.py が生成する表へ置き換えた.
+\input{../output/tables/model_comparison.tex}
 比較の結果, BICはベースラインモデルが最小となったが, 
 真のデータ生成構造が想定モデルクラスに含まれる強い根拠がなく, 
 今回は予測精度の良さを重視するため, AICに基づき提案モデル (-919.9) を最終的な分析に用いることとした.
 \subsection{提案モデルの推定結果}
-提案モデルのパラメータ推定結果を表\ref{tab:final_model_params}に示す. 
+提案モデルのパラメータ推定結果を表\ref{tab:final-model-params}に示す. 
 なお, 本研究で提案する状態空間モデルのパラメータ推定には, 
 PythonのライブラリであるStatsmodels (Seabold \& Perktold, 2010) を用いた. 
 具体的には, 同ライブラリのMLEModelクラスを継承して独自のクラスを構築し, (1)式〜(4)式で定義した遷移行列および観測行列を実装することで, 
 カルマンフィルタによる対数尤度の計算および最尤推定を行った. 
 また, 初期値依存を避け安定した解を得るため, 複数の初期値候補によるグリッドサーチによって最尤解を探索した. 結果を表3に示す. 
 
-\begin{table}[H]
-  \centering
-  \caption{提案モデルのパラメータ推定結果}
-  \label{tab:final_model_params}
-  \small
-  \begin{tabular}{lrrc}
-    \hline
-    パラメータ & \multicolumn{1}{c}{推定値 (coef)} & \multicolumn{1}{c}{標準誤差 (std err)} & p値($P>|z|$) \\
-    \hline
-    \multicolumn{4}{l}{\textit{外生変数効果}} \\
-    hike\_effect & -0.023 & 0.031 & 0.464 \\
-    covid\_main\_effect & 0.049 & 0.040 & 0.222 \\
-    covid\_wave1\_effect & 0.045 & 0.026 & 0.077 \\
-    covid\_2021\_effect & 0.020 & 0.015 & 0.184 \\
-    \hline
-    \multicolumn{4}{l}{\textit{分散パラメータ}} \\
-    観測ノイズ ($\sigma_{\epsilon}^2$) & 0.0003 & 4.35e-05 & 0.000 \\
-    トレンドノイズ ($\sigma_{\mu}^2$) & 8.66e-05 & 2.29e-05 & 0.000 \\
-    傾きノイズ ($\sigma_{\delta}^2$) & 2.46e-11 & 2.61e-08 & 0.999 \\
-    季節ノイズ ($\sigma_{\gamma}^2$) & 5.30e-05 & 1.63e-05 & 0.001 \\
-    \hline
-  \end{tabular}
-\end{table}
+% 旧手入力表は再現性確保のため, scripts/run_analysis.py が生成する表へ置き換えた.
+\input{../output/tables/final_model_params.tex}
 
-表\ref{tab:final_model_params}から, コロナ禍第一波の効果（\texttt{covid\_wave1\_effect}）の係数が約0.045であり, 10\%水準で統計的に有意であったことが確認できる（p=0.077）. 
+表\ref{tab:final-model-params}から, コロナ禍第一波の効果（\texttt{covid\_wave1\_effect}）の係数が約0.045であり, 10\%水準で統計的に有意であったことが確認できる（p=0.077）. 
 目的変数は対数変換されているため(和合, 2008), $exp(0.045)-1 \approx 0.046$となり, 
 最初の緊急事態宣言下において, 他の要因に加えて約4.6\%の追加的な需要増があったことを示唆している. 
 
