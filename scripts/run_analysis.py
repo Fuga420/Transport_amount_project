@@ -89,6 +89,30 @@ MODEL_COMPARISON_SPECS = [
     },
 ]
 
+MODEL_LABELS = {
+    "baseline": "Baseline",
+    "simple_event": "Simple event",
+    "proposed_phase_fixed_exog": "Proposed",
+}
+
+EXOG_LABELS = {
+    "hike_dummy": "Price revision",
+    "covid_main": "COVID main",
+    "covid_wave1": "First COVID wave",
+    "covid_2021": "2021 COVID",
+}
+
+PARAMETER_LABELS = {
+    "obs_error": "Observation error variance",
+    "level_noise": "Level noise variance",
+    "slope_noise": "Slope noise variance",
+    "seasonal_noise": "Seasonal noise variance",
+    "hike_effect": "Price revision effect",
+    "covid_main_effect": "COVID main effect",
+    "covid_wave1_effect": "First COVID wave effect",
+    "covid_2021_effect": "2021 COVID effect",
+}
+
 
 def ensure_output_dirs() -> None:
     """Create output directories required by the reproducible pipeline."""
@@ -351,6 +375,134 @@ def build_model_comparison(
     return pd.DataFrame(rows)
 
 
+def latex_escape(value: object) -> str:
+    """Escape plain text for a LaTeX table cell."""
+    text = str(value)
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    for source, replacement in replacements.items():
+        text = text.replace(source, replacement)
+    return text
+
+
+def format_decimal(value: object, digits: int) -> str:
+    """Format a numeric table value with a fixed number of decimal places."""
+    if pd.isna(value):
+        return ""
+    return f"{float(value):.{digits}f}"
+
+
+def format_p_value(value: object) -> str:
+    """Format a p value for the paper parameter table."""
+    if pd.isna(value):
+        return ""
+    p_value = float(value)
+    if p_value < 0.001:
+        return r"$<0.001$"
+    return f"{p_value:.3f}"
+
+
+def format_exog_labels(exog_variables: object) -> str:
+    """Convert comma-separated exogenous variable names to paper labels."""
+    if pd.isna(exog_variables) or exog_variables == "":
+        return "None"
+    names = str(exog_variables).split(",")
+    return ", ".join(EXOG_LABELS.get(name, name) for name in names)
+
+
+def write_latex_table(
+    path: Path,
+    caption: str,
+    label: str,
+    column_spec: str,
+    headers: list[str],
+    rows: list[list[str]],
+) -> None:
+    """Write a small LaTeX table fragment for future paper inclusion."""
+    lines = [
+        r"\begin{table}[htbp]",
+        r"  \centering",
+        f"  \\caption{{{latex_escape(caption)}}}",
+        f"  \\label{{{latex_escape(label)}}}",
+        f"  \\begin{{tabular}}{{{column_spec}}}",
+        r"    \hline",
+        "    " + " & ".join(latex_escape(header) for header in headers) + r" \\",
+        r"    \hline",
+    ]
+
+    for row in rows:
+        lines.append("    " + " & ".join(row) + r" \\")
+
+    lines.extend(
+        [
+            r"    \hline",
+            r"  \end{tabular}",
+            r"\end{table}",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_model_comparison_latex(model_comparison: pd.DataFrame) -> None:
+    """Write the canonical model-comparison table as a LaTeX fragment."""
+    rows = []
+    for _, row in model_comparison.iterrows():
+        rows.append(
+            [
+                latex_escape(MODEL_LABELS.get(row["model_name"], row["model_name"])),
+                latex_escape(row["comparison_role"]),
+                latex_escape(format_exog_labels(row["exog_variables"])),
+                format_decimal(row["log_likelihood"], 1),
+                format_decimal(row["aic"], 1),
+                format_decimal(row["bic"], 1),
+            ]
+        )
+
+    write_latex_table(
+        path=TABLES_DIR / "model_comparison.tex",
+        caption="Canonical model comparison",
+        label="tab:model-comparison",
+        column_spec="lllrrr",
+        headers=["Model", "Role", "Exogenous variables", "Log likelihood", "AIC", "BIC"],
+        rows=rows,
+    )
+
+
+def write_final_model_params_latex(final_model_params: pd.DataFrame) -> None:
+    """Write the proposed model parameter table as a LaTeX fragment."""
+    rows = []
+    for _, row in final_model_params.iterrows():
+        rows.append(
+            [
+                latex_escape(PARAMETER_LABELS.get(row["parameter"], row["parameter"])),
+                format_decimal(row["estimate"], 3),
+                format_decimal(row["std_error"], 3),
+                format_decimal(row["z_value"], 3),
+                format_p_value(row["p_value"]),
+            ]
+        )
+
+    write_latex_table(
+        path=TABLES_DIR / "final_model_params.tex",
+        caption="Parameter estimates for the proposed model",
+        label="tab:final-model-params",
+        column_spec="lrrrr",
+        headers=["Parameter", "Estimate", "Std. error", "z value", "p value"],
+        rows=rows,
+    )
+
+
 def build_final_model_fit_summary(
     result,
     df: pd.DataFrame,
@@ -418,6 +570,7 @@ def main() -> None:
 
     final_model_params.to_csv(TABLES_DIR / "final_model_params.csv", index=False)
     final_model_fit_summary.to_csv(TABLES_DIR / "final_model_fit_summary.csv", index=False)
+    write_final_model_params_latex(final_model_params)
 
     print("\nFinal model fit summary")
     print(final_model_fit_summary.to_string(index=False))
@@ -425,6 +578,7 @@ def main() -> None:
     print("\nModel comparison")
     model_comparison = build_model_comparison(df, result)
     model_comparison.to_csv(TABLES_DIR / "model_comparison.csv", index=False)
+    write_model_comparison_latex(model_comparison)
     print(model_comparison.to_string(index=False))
 
     # TODO: Generate reproducible figures for paper_2.tex.
