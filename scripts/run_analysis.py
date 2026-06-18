@@ -1,0 +1,775 @@
+"""Reproducible analysis entry point.
+
+This script currently loads the main dataset, creates event dummies,
+and writes lightweight reproducibility checks. Full model estimation and
+paper-ready reporting will be added in a later phase.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+from platform import python_version
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import numpy as np
+import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+
+from src.data_loader import load_transport_data
+from src.features import get_default_event_config, prepare_event_data
+from src.ssm_models import LocalLinearTrendSeasonalWithMultiFixedExog
+from src.paths import (
+    FIGURES_DIR,
+    INTERMEDIATE_DIR,
+    LOGS_DIR,
+    MAIN_DATA_PATH,
+    OUTPUT_DIR,
+    TABLES_DIR,
+)
+
+
+KEY_COLUMNS = [
+    "year",
+    "month",
+    "Transport_tonnage",
+    "number_parcels",
+    "Number_companies_1",
+    "Number_companies_2",
+    "y",
+]
+
+BASE_PARAM_NAMES = [
+    "obs_error",
+    "level_noise",
+    "slope_noise",
+    "seasonal_noise",
+]
+
+COEFF_START_HINTS = {
+    "covid_main": -2.0,
+    "covid_wave1": -2.0,
+    "covid_2021": -3.0,
+}
+
+FINAL_MODEL_NAME = "proposed_phase_fixed_exog"
+CANONICAL_MODEL_FAMILY = "local_linear_trend_seasonal"
+CANONICAL_STATE_STRUCTURE = "local linear trend + seasonal"
+
+EXOG_PARAM_NAME_OVERRIDES = {
+    "hike_dummy": "hike_effect",
+}
+
+MODEL_COMPARISON_SPECS = [
+    {
+        "model_name": "baseline",
+        "paper_label": "1. ベースラインモデル",
+        "comparison_role": "no event dummies",
+        "exog_names": [],
+        "model_family": CANONICAL_MODEL_FAMILY,
+    },
+    {
+        "model_name": "simple_event",
+        "paper_label": "2. 単純イベントモデル",
+        "comparison_role": "major event dummies only",
+        "exog_names": ["hike_dummy", "covid_main"],
+        "model_family": CANONICAL_MODEL_FAMILY,
+    },
+    {
+        "model_name": FINAL_MODEL_NAME,
+        "paper_label": "3. 提案モデル",
+        "comparison_role": "phased event dummies",
+        "exog_names": ["hike_dummy", "covid_main", "covid_wave1", "covid_2021"],
+        "model_family": CANONICAL_MODEL_FAMILY,
+    },
+]
+
+MODEL_LABELS = {
+    "baseline": "Baseline",
+    "simple_event": "Simple event",
+    "proposed_phase_fixed_exog": "Proposed",
+}
+
+EXOG_LABELS = {
+    "hike_dummy": "Price revision",
+    "covid_main": "COVID main",
+    "covid_wave1": "First COVID wave",
+    "covid_2021": "2021 COVID",
+}
+
+PARAMETER_LABELS = {
+    "obs_error": "Observation error variance",
+    "level_noise": "Level noise variance",
+    "slope_noise": "Slope noise variance",
+    "seasonal_noise": "Seasonal noise variance",
+    "hike_effect": "Price revision effect",
+    "covid_main_effect": "COVID main effect",
+    "covid_wave1_effect": "First COVID wave effect",
+    "covid_2021_effect": "2021 COVID effect",
+}
+
+EVENT_SHADING = {
+    "hike_dummy": ("2017-10-01", "2019-12-01", 0.10),
+    "covid_wave1": ("2020-04-01", "2020-05-01", 0.20),
+    "covid_2021": ("2021-01-01", "2021-09-01", 0.15),
+}
+
+
+def ensure_output_dirs() -> None:
+    """Create output directories required by the reproducible pipeline."""
+    for path in (OUTPUT_DIR, TABLES_DIR, FIGURES_DIR, LOGS_DIR, INTERMEDIATE_DIR):
+        path.mkdir(parents=True, exist_ok=True)
+
+
+def build_data_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Build a one-row summary of the loaded analysis dataset."""
+    return pd.DataFrame(
+        [
+            {
+                "data_start": df.index.min().strftime("%Y-%m-%d"),
+                "data_end": df.index.max().strftime("%Y-%m-%d"),
+                "n_rows": len(df),
+                "n_columns": len(df.columns),
+                "columns": ",".join(df.columns),
+                "key_columns_present": ",".join([col for col in KEY_COLUMNS if col in df.columns]),
+            }
+        ]
+    )
+
+
+def build_event_dummy_summary(df: pd.DataFrame, event_names: list[str]) -> pd.DataFrame:
+    """Summarize event dummy columns for quick reproducibility checks."""
+    rows = []
+
+    for name in event_names:
+        active_index = df.index[df[name] == 1]
+        rows.append(
+            {
+                "event": name,
+                "active_months": int(df[name].sum()),
+                "first_active_month": (
+                    active_index.min().strftime("%Y-%m-%d") if len(active_index) > 0 else ""
+                ),
+                "last_active_month": (
+                    active_index.max().strftime("%Y-%m-%d") if len(active_index) > 0 else ""
+                ),
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def write_run_metadata(df: pd.DataFrame) -> None:
+    """Write lightweight run metadata for reproducibility."""
+    metadata = {
+        "run_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "input_data_path": str(MAIN_DATA_PATH),
+        "data_start": df.index.min().strftime("%Y-%m-%d"),
+        "data_end": df.index.max().strftime("%Y-%m-%d"),
+        "n_rows": len(df),
+        "n_columns": len(df.columns),
+        "versions": {
+            "python": python_version(),
+            "pandas": pd.__version__,
+            "numpy": np.__version__,
+        },
+    }
+
+    metadata_path = LOGS_DIR / "run_metadata.json"
+    metadata_path.write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def build_start_params(exog_names: list[str]) -> list[float]:
+    """Build start params matching the notebook's final proposed model setup."""
+    init_variances = [0.01, 0.01, 0.001, 0.001]
+    init_coeffs = [COEFF_START_HINTS.get(name, 0.0) for name in exog_names]
+    return init_variances + init_coeffs
+
+
+def make_param_names(exog_names: list[str]) -> list[str]:
+    """Build parameter names matching paper and notebook naming."""
+    exog_param_names = [
+        EXOG_PARAM_NAME_OVERRIDES.get(name, f"{name}_effect")
+        for name in exog_names
+    ]
+    return BASE_PARAM_NAMES + exog_param_names
+
+
+def fit_model(
+    df: pd.DataFrame,
+    exog_data: list[pd.Series],
+    exog_names: list[str],
+):
+    """Fit one state-space model with the given fixed exogenous variables."""
+    param_names = make_param_names(exog_names)
+
+    model = LocalLinearTrendSeasonalWithMultiFixedExog(
+        endog=df["y"],
+        exog_list=exog_data,
+        param_names=param_names,
+        seasonal_period=12,
+    )
+
+    result = model.fit(
+        start_params=build_start_params(exog_names),
+        maxiter=1000,
+        disp=False,
+    )
+
+    return result, param_names
+
+
+def fit_final_model(
+    df: pd.DataFrame,
+    exog_data: list[pd.Series],
+    exog_names: list[str],
+):
+    """Fit the paper's proposed final model only."""
+    return fit_model(df, exog_data, exog_names)
+
+
+def build_final_model_params(result, param_names: list[str]) -> pd.DataFrame:
+    """Build a parameter table from a fitted statsmodels result."""
+    estimates = np.asarray(result.params, dtype=float)
+    std_errors = np.asarray(result.bse, dtype=float)
+    z_values = np.asarray(result.zvalues, dtype=float)
+    p_values = np.asarray(result.pvalues, dtype=float)
+
+    return pd.DataFrame(
+        {
+            "parameter": param_names,
+            "estimate": estimates,
+            "std_error": std_errors,
+            "z_value": z_values,
+            "p_value": p_values,
+        }
+    )
+
+
+def summarize_fit(
+    result,
+    df: pd.DataFrame,
+    model_name: str,
+    paper_label: str,
+    comparison_role: str,
+    exog_names: list[str],
+    model_family: str,
+) -> dict:
+    """Build one model-comparison row from a successful fit."""
+    log_likelihood = float(result.llf)
+    aic = float(result.aic)
+    bic = float(result.bic)
+
+    return {
+        "model_name": model_name,
+        "paper_label": paper_label,
+        "comparison_role": comparison_role,
+        "model_family": model_family,
+        "state_structure": CANONICAL_STATE_STRUCTURE,
+        "exog_variables": ",".join(exog_names),
+        "status": "success",
+        "error": "",
+        "nobs": int(result.nobs),
+        "log_likelihood": log_likelihood,
+        "aic": aic,
+        "bic": bic,
+        "log_likelihood_rounded": round(log_likelihood, 1),
+        "aic_rounded": round(aic, 1),
+        "bic_rounded": round(bic, 1),
+        "dependent_variable": "y",
+        "data_start": df.index.min().strftime("%Y-%m-%d"),
+        "data_end": df.index.max().strftime("%Y-%m-%d"),
+    }
+
+
+def summarize_failure(
+    df: pd.DataFrame,
+    model_name: str,
+    paper_label: str,
+    comparison_role: str,
+    exog_names: list[str],
+    model_family: str,
+    error: Exception,
+) -> dict:
+    """Build one model-comparison row from a failed fit."""
+    return {
+        "model_name": model_name,
+        "paper_label": paper_label,
+        "comparison_role": comparison_role,
+        "model_family": model_family,
+        "state_structure": CANONICAL_STATE_STRUCTURE,
+        "exog_variables": ",".join(exog_names),
+        "status": "failed",
+        "error": str(error),
+        "nobs": np.nan,
+        "log_likelihood": np.nan,
+        "aic": np.nan,
+        "bic": np.nan,
+        "log_likelihood_rounded": np.nan,
+        "aic_rounded": np.nan,
+        "bic_rounded": np.nan,
+        "dependent_variable": "y",
+        "data_start": df.index.min().strftime("%Y-%m-%d"),
+        "data_end": df.index.max().strftime("%Y-%m-%d"),
+    }
+
+
+def build_model_comparison(
+    df: pd.DataFrame,
+    final_result,
+) -> pd.DataFrame:
+    """Fit the paper's model-comparison specifications and summarize them."""
+    rows = []
+
+    for spec in MODEL_COMPARISON_SPECS:
+        model_name = spec["model_name"]
+        paper_label = spec["paper_label"]
+        comparison_role = spec["comparison_role"]
+        exog_names = spec["exog_names"]
+
+        model_family = spec["model_family"]
+
+        if model_name == FINAL_MODEL_NAME:
+            rows.append(
+                summarize_fit(
+                    final_result,
+                    df,
+                    model_name,
+                    paper_label,
+                    comparison_role,
+                    exog_names,
+                    model_family,
+                )
+            )
+            continue
+
+        try:
+            exog_data = [df[name] for name in exog_names]
+            result, _param_names = fit_model(df, exog_data, exog_names)
+            rows.append(
+                summarize_fit(
+                    result,
+                    df,
+                    model_name,
+                    paper_label,
+                    comparison_role,
+                    exog_names,
+                    model_family,
+                )
+            )
+        except Exception as exc:
+            rows.append(
+                summarize_failure(
+                    df,
+                    model_name,
+                    paper_label,
+                    comparison_role,
+                    exog_names,
+                    model_family,
+                    exc,
+                )
+            )
+
+    return pd.DataFrame(rows)
+
+
+def latex_escape(value: object) -> str:
+    """Escape plain text for a LaTeX table cell."""
+    text = str(value)
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    for source, replacement in replacements.items():
+        text = text.replace(source, replacement)
+    return text
+
+
+def format_decimal(value: object, digits: int) -> str:
+    """Format a numeric table value with a fixed number of decimal places."""
+    if pd.isna(value):
+        return ""
+    return f"{float(value):.{digits}f}"
+
+
+def format_p_value(value: object) -> str:
+    """Format a p value for the paper parameter table."""
+    if pd.isna(value):
+        return ""
+    p_value = float(value)
+    if p_value < 0.001:
+        return r"$<0.001$"
+    return f"{p_value:.3f}"
+
+
+def format_exog_labels(exog_variables: object) -> str:
+    """Convert comma-separated exogenous variable names to paper labels."""
+    if pd.isna(exog_variables) or exog_variables == "":
+        return "None"
+    names = str(exog_variables).split(",")
+    return ", ".join(EXOG_LABELS.get(name, name) for name in names)
+
+
+def write_latex_table(
+    path: Path,
+    caption: str,
+    label: str,
+    column_spec: str,
+    headers: list[str],
+    rows: list[list[str]],
+) -> None:
+    """Write a small LaTeX table fragment for future paper inclusion."""
+    lines = [
+        r"\begin{table}[htbp]",
+        r"  \centering",
+        f"  \\caption{{{latex_escape(caption)}}}",
+        f"  \\label{{{latex_escape(label)}}}",
+        f"  \\begin{{tabular}}{{{column_spec}}}",
+        r"    \hline",
+        "    " + " & ".join(latex_escape(header) for header in headers) + r" \\",
+        r"    \hline",
+    ]
+
+    for row in rows:
+        lines.append("    " + " & ".join(row) + r" \\")
+
+    lines.extend(
+        [
+            r"    \hline",
+            r"  \end{tabular}",
+            r"\end{table}",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_model_comparison_latex(model_comparison: pd.DataFrame) -> None:
+    """Write the canonical model-comparison table as a LaTeX fragment."""
+    rows = []
+    for _, row in model_comparison.iterrows():
+        rows.append(
+            [
+                latex_escape(MODEL_LABELS.get(row["model_name"], row["model_name"])),
+                latex_escape(row["comparison_role"]),
+                latex_escape(format_exog_labels(row["exog_variables"])),
+                format_decimal(row["log_likelihood"], 1),
+                format_decimal(row["aic"], 1),
+                format_decimal(row["bic"], 1),
+            ]
+        )
+
+    write_latex_table(
+        path=TABLES_DIR / "model_comparison.tex",
+        caption="Canonical model comparison",
+        label="tab:model-comparison",
+        column_spec="lllrrr",
+        headers=["Model", "Role", "Exogenous variables", "Log likelihood", "AIC", "BIC"],
+        rows=rows,
+    )
+
+
+def write_final_model_params_latex(final_model_params: pd.DataFrame) -> None:
+    """Write the proposed model parameter table as a LaTeX fragment."""
+    rows = []
+    for _, row in final_model_params.iterrows():
+        rows.append(
+            [
+                latex_escape(PARAMETER_LABELS.get(row["parameter"], row["parameter"])),
+                format_decimal(row["estimate"], 3),
+                format_decimal(row["std_error"], 3),
+                format_decimal(row["z_value"], 3),
+                format_p_value(row["p_value"]),
+            ]
+        )
+
+    write_latex_table(
+        path=TABLES_DIR / "final_model_params.tex",
+        caption="Parameter estimates for the proposed model",
+        label="tab:final-model-params",
+        column_spec="lrrrr",
+        headers=["Parameter", "Estimate", "Std. error", "z value", "p value"],
+        rows=rows,
+    )
+
+
+def build_final_model_fit_summary(
+    result,
+    df: pd.DataFrame,
+    exog_names: list[str],
+) -> pd.DataFrame:
+    """Build a one-row fit summary for the paper's final model."""
+    return pd.DataFrame(
+        [
+            {
+                "model_name": FINAL_MODEL_NAME,
+                "nobs": int(result.nobs),
+                "log_likelihood": float(result.llf),
+                "aic": float(result.aic),
+                "bic": float(result.bic),
+                "dependent_variable": "y",
+                "exog_variables": ",".join(exog_names),
+                "data_start": df.index.min().strftime("%Y-%m-%d"),
+                "data_end": df.index.max().strftime("%Y-%m-%d"),
+            }
+        ]
+    )
+
+
+def add_event_shading(ax, df: pd.DataFrame) -> None:
+    """Add light event-period shading to a time-series axis."""
+    for _name, (start, end, alpha) in EVENT_SHADING.items():
+        ax.axvspan(
+            pd.Timestamp(start),
+            pd.Timestamp(end),
+            color="gray",
+            alpha=alpha,
+            zorder=-1,
+        )
+
+
+def format_date_axis(ax) -> None:
+    """Format a date axis for paper figures."""
+    ax.xaxis.set_major_locator(mdates.YearLocator(base=4))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.grid(True, color="0.80", linewidth=0.8)
+
+
+def compute_model_components(
+    result,
+    df: pd.DataFrame,
+    param_names: list[str],
+    exog_names: list[str],
+) -> dict:
+    """Compute fitted values and components for the canonical proposed model."""
+    param_map = dict(zip(param_names, np.asarray(result.params, dtype=float)))
+    trend = np.asarray(result.smoother_results.smoothed_state[0], dtype=float)
+    seasonal = np.asarray(result.smoother_results.smoothed_state[2], dtype=float)
+
+    effects = {}
+    total_event_effect = np.zeros(len(df), dtype=float)
+    for exog_name in exog_names:
+        param_name = EXOG_PARAM_NAME_OVERRIDES.get(exog_name, f"{exog_name}_effect")
+        effect = param_map[param_name] * df[exog_name].to_numpy(dtype=float)
+        effects[exog_name] = effect
+        total_event_effect += effect
+
+    fitted = trend + seasonal + total_event_effect
+    residual = df["y"].to_numpy(dtype=float) - fitted
+
+    return {
+        "trend": trend,
+        "seasonal": seasonal,
+        "effects": effects,
+        "total_event_effect": total_event_effect,
+        "fitted": fitted,
+        "residual": residual,
+    }
+
+
+def plot_original_series(df: pd.DataFrame, save_path: Path) -> None:
+    """Plot the raw parcel-volume series used in the paper overview figure."""
+    fig, ax = plt.subplots(figsize=(10.25, 5.25))
+    ax.plot(df.index, df["number_parcels"], color="black", linewidth=1.0, label="number_parcels")
+    ax.set_xlabel("date")
+    ax.set_ylabel("Parcel volume")
+    ax.legend(loc="upper left")
+    format_date_axis(ax)
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_decomposition_main(
+    df: pd.DataFrame,
+    components: dict,
+    save_path: Path,
+) -> None:
+    """Plot observed/fitted, trend, and seasonal components."""
+    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10, 8.6), sharex=True)
+
+    axes[0].plot(df.index, df["y"], color="dimgray", label="Observed", linewidth=0.8)
+    axes[0].plot(
+        df.index,
+        components["fitted"],
+        color="black",
+        linestyle="--",
+        label="Fitted",
+        linewidth=1.0,
+    )
+    axes[0].set_title("Observed vs. Fitted Values")
+    axes[0].legend(loc="upper left")
+
+    axes[1].plot(df.index, components["trend"], color="black", label="Trend", linewidth=1.0)
+    axes[1].set_title("Trend Component")
+    trend_min = float(np.min(components["trend"]))
+    trend_max = float(np.max(components["trend"]))
+    margin = (trend_max - trend_min) * 0.1
+    axes[1].set_ylim(trend_min - margin, trend_max + margin)
+
+    axes[2].plot(df.index, components["seasonal"], color="black", label="Seasonal", linewidth=0.8)
+    axes[2].set_title("Seasonal Component")
+    axes[2].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[2].set_xlabel("Date")
+
+    for ax in axes:
+        add_event_shading(ax, df)
+        ax.set_ylabel("Value (log)")
+        format_date_axis(ax)
+
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_decomposition_effects(
+    df: pd.DataFrame,
+    components: dict,
+    save_path: Path,
+) -> None:
+    """Plot event effects and residuals for the canonical proposed model."""
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(10, 5.6), sharex=True)
+
+    styles = {
+        "hike_dummy": "-.",
+        "covid_main": "--",
+        "covid_wave1": "-",
+        "covid_2021": ":",
+    }
+    for exog_name, effect in components["effects"].items():
+        axes[0].plot(
+            df.index,
+            effect,
+            color="black",
+            linestyle=styles.get(exog_name, "-"),
+            label=f"{EXOG_LABELS.get(exog_name, exog_name)} effect",
+            linewidth=1.0,
+        )
+
+    axes[0].set_title("External Event Effects")
+    axes[0].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[0].legend(loc="upper left")
+
+    axes[1].plot(df.index, components["residual"], color="black", linewidth=0.8, label="Residuals")
+    axes[1].set_title("Residuals")
+    axes[1].axhline(y=0, color="grey", linestyle=":", linewidth=1.0)
+    axes[1].set_xlabel("Date")
+
+    for ax in axes:
+        add_event_shading(ax, df)
+        ax.set_ylabel("Value (log)")
+        format_date_axis(ax)
+
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def write_paper_figures(
+    df: pd.DataFrame,
+    result,
+    param_names: list[str],
+    exog_names: list[str],
+) -> list[Path]:
+    """Write the three primary paper figures to output/figures."""
+    components = compute_model_components(result, df, param_names, exog_names)
+    figure_paths = [
+        FIGURES_DIR / "original_series.png",
+        FIGURES_DIR / "decomposition_main.png",
+        FIGURES_DIR / "decomposition_effects.png",
+    ]
+
+    plot_original_series(df, figure_paths[0])
+    plot_decomposition_main(df, components, figure_paths[1])
+    plot_decomposition_effects(df, components, figure_paths[2])
+
+    return figure_paths
+
+
+def main() -> None:
+    ensure_output_dirs()
+
+    print("Reproducible analysis scaffold: data loading and feature checks")
+    print(f"Input data: {MAIN_DATA_PATH}")
+    print(f"Output directory: {OUTPUT_DIR}")
+    print(f"Tables directory: {TABLES_DIR}")
+    print(f"Figures directory: {FIGURES_DIR}")
+    print(f"Logs directory: {LOGS_DIR}")
+    print(f"Intermediate directory: {INTERMEDIATE_DIR}")
+
+    df = load_transport_data(str(MAIN_DATA_PATH))
+
+    event_config = get_default_event_config()
+    df, exog_data, event_names = prepare_event_data(df, event_config)
+
+    data_summary = build_data_summary(df)
+    event_dummy_summary = build_event_dummy_summary(df, event_names)
+
+    data_summary.to_csv(TABLES_DIR / "data_summary.csv", index=False)
+    event_dummy_summary.to_csv(TABLES_DIR / "event_dummy_summary.csv", index=False)
+    write_run_metadata(df)
+
+    print("\nData summary")
+    print(f"- Period: {df.index.min().strftime('%Y-%m-%d')} to {df.index.max().strftime('%Y-%m-%d')}")
+    print(f"- Shape: {len(df)} rows x {len(df.columns)} columns")
+    print(f"- Key columns: {', '.join([col for col in KEY_COLUMNS if col in df.columns])}")
+
+    print("\nEvent dummy summary")
+    print(event_dummy_summary.to_string(index=False))
+
+    print("\nFinal model")
+    print(f"- Model name: {FINAL_MODEL_NAME}")
+    print("- State-space class: LocalLinearTrendSeasonalWithMultiFixedExog")
+    print("- Dependent variable: y")
+    print(f"- Exogenous variables: {', '.join(event_names)}")
+    print(f"- Estimation period: {df.index.min().strftime('%Y-%m-%d')} to {df.index.max().strftime('%Y-%m-%d')}")
+
+    result, param_names = fit_final_model(df, exog_data, event_names)
+    final_model_params = build_final_model_params(result, param_names)
+    final_model_fit_summary = build_final_model_fit_summary(result, df, event_names)
+
+    final_model_params.to_csv(TABLES_DIR / "final_model_params.csv", index=False)
+    final_model_fit_summary.to_csv(TABLES_DIR / "final_model_fit_summary.csv", index=False)
+    write_final_model_params_latex(final_model_params)
+    figure_paths = write_paper_figures(df, result, param_names, event_names)
+
+    print("\nFinal model fit summary")
+    print(final_model_fit_summary.to_string(index=False))
+
+    print("\nPaper figures")
+    for figure_path in figure_paths:
+        print(f"- {figure_path}")
+
+    print("\nModel comparison")
+    model_comparison = build_model_comparison(df, result)
+    model_comparison.to_csv(TABLES_DIR / "model_comparison.csv", index=False)
+    write_model_comparison_latex(model_comparison)
+    print(model_comparison.to_string(index=False))
+
+    # TODO: Save run metadata and diagnostics.
+
+
+if __name__ == "__main__":
+    main()

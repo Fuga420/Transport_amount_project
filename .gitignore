@@ -17,6 +17,22 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Processed data generated from raw sources
+data/processed/*
+!data/processed/.gitkeep
+
+# Reproducible pipeline generated outputs
+output/logs/*
+!output/logs/.gitkeep
+output/intermediate/*
+!output/intermediate/.gitkeep
+
+# Large temporary output artifacts
+output/html/*
+!output/html/.gitkeep
+*.tmp
+*.temp
+
 # LaTeX auxiliary files
 *.aux
 *.log
@@ -27,7 +43,11 @@ Thumbs.db
 *.lot
 *.bbl
 *.blg
+*.dvi
 *.fls
 *.fdb_latexmk
+
+# Generated analysis tables
+output/tables/*.csv
 
 # PDF file

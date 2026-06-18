@@ -89,11 +89,77 @@ $$
 ## 5. 主要な分析結果
 ### 5.1. モデル選択のプロセス
 
-## 6. 実行環境のセットアップと実行方法
+## 6. 再現可能な分析手順
 
-### 6.1. 必要なライブラリ
-本分析に必要なライブラリは `requirements.txt` にまとめた. 
+このリポジトリは, 日本国内の宅配便取扱個数の月次時系列を対象に, 状態空間モデルを用いてトレンド, 季節性, 外部イベント効果を分離・定量化する研究プロジェクトである.
+
+正規の分析入口は `scripts/run_analysis.py` である. Notebook は探索履歴として残しているが, 論文に用いる正規結果は `scripts/run_analysis.py` から再生成する.
+
+### 6.1. 入力データ
+
+分析に用いる入力データは以下である.
+
+```text
+data/raw/Transport_amount_data.csv
+```
+
+### 6.2. Python環境
+
+仮想環境を有効化し, 必要なライブラリをインストールする.
 
 ```bash
+source .venv/bin/activate
 pip install -r requirements.txt
+```
 
+### 6.3. 分析実行
+
+以下を実行すると, データ読み込み, 特徴量作成, canonical model の推定, 論文用の表と図の生成を行う.
+
+```bash
+python scripts/run_analysis.py
+```
+
+主な生成物は以下である.
+
+表:
+
+```text
+output/tables/model_comparison.tex
+output/tables/final_model_params.tex
+```
+
+図:
+
+```text
+output/figures/original_series.png
+output/figures/decomposition_main.png
+output/figures/decomposition_effects.png
+```
+
+CSVやログは中間生成物であり, 必要に応じて `scripts/run_analysis.py` から再生成する.
+
+### 6.4. 論文PDFビルド
+
+論文ファイルは以下である.
+
+```text
+paper_2/paper_2.tex
+paper_2/paper_2.pdf
+```
+
+`paper_2.tex` は, `scripts/run_analysis.py` が生成した表と図を読み込む. PDF を更新する場合は, 通常の `latexmk -pdf` ではなく, pLaTeX 系の `platex + dvipdfmx` を使う.
+
+```bash
+cd paper_2
+platex paper_2.tex
+platex paper_2.tex
+dvipdfmx paper_2.dvi
+```
+
+### 6.5. 注意点
+
+- `output/tables/*.tex` と `output/figures/*.png` は `scripts/run_analysis.py` から再生成される.
+- Notebook は探索・試行錯誤の記録であり, 正規の結果生成には使わない.
+- `paper_2.tex` は生成済みの表・図を読み込むため, 論文をビルドする前に必要に応じて `python scripts/run_analysis.py` を実行する.
+- このプロジェクトでは `jarticle` を使っているため, PDF ビルドには `platex + dvipdfmx` を使う.
