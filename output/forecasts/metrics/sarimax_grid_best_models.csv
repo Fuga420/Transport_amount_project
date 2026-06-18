@@ -1,0 +1,5 @@
+model,split,order,seasonal_order,spec_name,used_exog_columns,converged,warnflag,log_likelihood,aic,bic,rmse,mae,mape,mase,status,error,selection_note
+sarima,fixed_a,"(0, 1, 1)","(1, 1, 1, 12)",none,,True,0,400.90508484023087,-793.8101696804617,-780.907182985609,40578.64025135272,38202.37167065145,9.594779257345486,3.527847093757181,success,,best converged RMSE
+sarimax,fixed_a,"(0, 1, 1)","(0, 1, 1, 12)",baseline_m4,hike_dummy,True,0,402.08973759752655,-796.1794751950531,-783.2764885002003,29828.573653014184,26984.723325397365,6.782755935853907,2.4919389450493066,success,,best converged RMSE
+sarima,fixed_b,"(2, 1, 1)","(0, 1, 1, 12)",none,,True,0,497.3830859604123,-984.7661719208246,-967.4895663440361,14790.762992482596,12236.132613014448,3.071175199038649,0.9783565599502786,success,,best converged RMSE
+sarimax,fixed_b,"(0, 1, 1)","(0, 1, 1, 12)",baseline_m4,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",True,0,507.68036998771254,-999.3607399754251,-971.7181710525634,7975.062045642783,6701.292188555835,1.709269980857646,0.5358108954984582,success,,best converged RMSE

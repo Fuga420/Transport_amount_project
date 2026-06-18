@@ -1,0 +1,5 @@
+model,split,forecast_type,spec_name,used_exog,converged,warnflag,convergence_warning,log_likelihood,aic,bic
+sarima,fixed_a,unconditional,none,,True,0,False,401.43813860792915,-792.8762772158583,-776.7475438472923
+sarimax,fixed_a,conditional,baseline_m4,hike_dummy,False,1,True,401.85018257274703,-791.7003651454941,-772.3458851032149
+sarima,fixed_b,unconditional,none,,True,0,False,497.00215749774065,-984.0043149954813,-966.7277094186928
+sarimax,fixed_b,conditional,baseline_m4,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",False,1,True,507.7462270094531,-995.4924540189062,-960.9392428653292
