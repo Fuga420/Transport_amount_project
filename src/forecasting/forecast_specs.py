@@ -16,6 +16,13 @@ FORECAST_SPECS = {
         "test_end": "2021-12-01",
         "target_col": "number_parcels",
         "target_scale": "original",
+        "exog_periods": {
+            "hike_dummy": ("2017-10-01", "2019-12-01"),
+            "covid_main": ("2020-03-01", "2023-05-01"),
+            "covid_wave1": ("2020-04-01", "2020-05-01"),
+            "covid_2021": ("2021-01-01", "2021-09-01"),
+            "post_stat_change": ("2022-08-01", None),
+        },
     },
     "post2020_m5": {
         "spec_name": "post2020_m5",
@@ -42,4 +49,3 @@ def get_forecast_spec(spec_name: str) -> dict:
 def list_forecast_specs() -> list[str]:
     """List available forecast specification names."""
     return sorted(FORECAST_SPECS)
-
