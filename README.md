@@ -163,3 +163,20 @@ dvipdfmx paper_2.dvi
 - Notebook は探索・試行錯誤の記録であり, 正規の結果生成には使わない.
 - `paper_2.tex` は生成済みの表・図を読み込むため, 論文をビルドする前に必要に応じて `python scripts/run_analysis.py` を実行する.
 - このプロジェクトでは `jarticle` を使っているため, PDF ビルドには `platex + dvipdfmx` を使う.
+
+
+## ブランチの切り方
+main
+= 安定版
+
+feature/...
+= 機能追加・基盤整備
+
+experiment/...
+= 探索分析・試行錯誤
+
+analysis/...
+= ある程度目的が明確な分析
+
+paper/...
+= 論文本文や図表修正
