@@ -1,0 +1,3 @@
+model,split,forecast_type,spec_name,used_exog,converged,warnflag,iterations,log_likelihood,aic,bic
+ssm,fixed_a,conditional,baseline_m4,hike_dummy,True,0,23,414.8052720689205,-793.610544137841,-733.1072851550713
+ssm,fixed_b,conditional,baseline_m4,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",True,0,76,521.6982459287602,-999.3964918575205,-920.9770428964212

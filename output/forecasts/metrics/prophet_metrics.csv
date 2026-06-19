@@ -1,0 +1,3 @@
+model,split,forecast_type,spec_name,n,rmse,mae,mape,mase
+prophet,fixed_a,unconditional,prophet_no_regressors,24,27498.765817515934,24252.68521769565,6.245448086035096,2.2396453759122417
+prophet,fixed_b,unconditional,prophet_no_regressors,26,26730.003402591406,19845.06637077212,4.8342690677170905,1.5867391667399091
