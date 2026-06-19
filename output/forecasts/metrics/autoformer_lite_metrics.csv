@@ -1,0 +1,2 @@
+model,split,forecast_type,spec_name,n,rmse,mae,mape,mase
+autoformer_lite,fixed_b,unconditional,autoformer_lite_univariate,26,35587.38942265155,32410.636313106665,8.536475959327985,2.591436334660553
