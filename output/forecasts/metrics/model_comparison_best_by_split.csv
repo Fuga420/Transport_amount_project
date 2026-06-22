@@ -1,3 +1,3 @@
-split,model,forecast_type,information_set,rmse,mae,mape,mase,rmse_rank_within_split,mape_rank_within_split,mase_rank_within_split,notes
-fixed_a,prophet,unconditional,unconditional,27498.76581751593,24252.68521769565,6.245448086035096,2.2396453759122417,1.0,1.0,1.0,Prophet on log scale; no holidays and no regressors
-fixed_b,sarimax_grid_best,conditional,conditional_exog_known,7975.062045642783,6701.292188555835,1.709269980857646,0.5358108954984582,1.0,1.0,1.0,small SARIMAX order grid best by converged RMSE; conditional forecast with test-period exogenous dummies known
+split,best_unconditional,best_unconditional_rmse,best_unconditional_mape,best_unconditional_mase,best_conditional,best_conditional_rmse,best_conditional_mape,best_conditional_mase,best_overall_reference,best_overall_reference_information_set,best_overall_reference_rmse,best_overall_reference_mape,best_overall_reference_mase
+fixed_a,prophet,27498.76581751593,6.245448086035096,2.2396453759122417,sarimax_grid_best,29828.573653014184,6.782755935853907,2.4919389450493066,prophet,unconditional,27498.76581751593,6.245448086035096,2.2396453759122417
+fixed_b,seasonal_naive,13622.783591073843,2.9067611824609183,0.92908669168343,sarimax_grid_best,7975.062045642783,1.709269980857646,0.5358108954984582,sarimax_grid_best,conditional_exog_known,7975.062045642783,1.709269980857646,0.5358108954984582
