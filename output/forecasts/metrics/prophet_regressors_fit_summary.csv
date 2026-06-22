@@ -1,0 +1,2 @@
+model,split,forecast_type,information_set,spec_name,used_regressors,yearly_seasonality,weekly_seasonality,daily_seasonality,holidays,uncertainty_samples
+prophet_regressors,fixed_b,conditional,conditional_exog_known,baseline_m4,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",True,False,False,False,0
