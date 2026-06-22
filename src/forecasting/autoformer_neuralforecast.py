@@ -15,13 +15,17 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from src.forecasting.forecast_utils import make_forecast_frame
 from src.forecasting.evaluation import evaluate_forecasts
+from src.features import add_period_dummies
+from src.forecasting.forecast_specs import get_forecast_spec
+from src.forecasting.forecast_utils import make_forecast_frame
 
 
 MODEL_NAME = "autoformer_neuralforecast"
 SPEC_NAME = "neuralforecast_autoformer_minimal"
 GRID_SPEC_NAME = "neuralforecast_autoformer_grid"
+EXOG_MODEL_NAME = "autoformer_neuralforecast_exog"
+EXOG_SPEC_NAME = "neuralforecast_autoformer_exog_baseline_m4"
 
 
 def _install_ray_import_stubs() -> bool:
@@ -138,6 +142,56 @@ def prepare_neuralforecast_frame(
     )
 
 
+def prepare_autoformer_exog_from_spec(df: pd.DataFrame, spec_name: str) -> pd.DataFrame:
+    """Create baseline exogenous dummy columns from a forecast spec."""
+    data = _with_datetime_index(df)
+    spec = get_forecast_spec(spec_name)
+    periods = spec.get("exog_periods", {})
+    if not periods:
+        return pd.DataFrame(index=data.index)
+
+    data = add_period_dummies(data, periods)
+    return data[list(periods.keys())].astype(float)
+
+
+def select_nonconstant_exog(
+    exog_train: pd.DataFrame,
+    exog_test: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
+    """Drop exogenous columns that are constant in the training period."""
+    train = exog_train.copy()
+    test = exog_test.copy()
+    if list(train.columns) != list(test.columns):
+        test = test.reindex(columns=train.columns)
+
+    keep_cols = [
+        col
+        for col in train.columns
+        if train[col].notna().any() and train[col].nunique(dropna=True) > 1
+    ]
+    return train[keep_cols].astype(float), test[keep_cols].astype(float), keep_cols
+
+
+def prepare_neuralforecast_frame_with_exog(
+    df: pd.DataFrame,
+    exog: pd.DataFrame,
+    target_col: str = "y",
+    unique_id: str = "parcel_volume",
+    include_y: bool = True,
+) -> pd.DataFrame:
+    """Convert data and aligned future exogenous variables to NeuralForecast format."""
+    data = _with_datetime_index(df)
+    exog_data = exog.reindex(data.index).astype(float)
+    frame = pd.DataFrame({"unique_id": unique_id, "ds": data.index})
+    if include_y:
+        if target_col not in data.columns:
+            raise ValueError(f"target_col '{target_col}' does not exist.")
+        frame["y"] = data[target_col].to_numpy(dtype=float)
+    for col in exog_data.columns:
+        frame[col] = exog_data[col].to_numpy(dtype=float)
+    return frame
+
+
 @dataclass
 class AutoformerNeuralForecastBundle:
     model: object
@@ -145,6 +199,7 @@ class AutoformerNeuralForecastBundle:
     versions: dict
     train_seconds: float
     train_index: pd.DatetimeIndex
+    used_exog_columns: list[str] | None = None
 
 
 def fit_autoformer_neuralforecast(
@@ -227,6 +282,102 @@ def fit_autoformer_neuralforecast(
         versions=versions,
         train_seconds=float(train_seconds),
         train_index=train_data.index,
+        used_exog_columns=None,
+    )
+
+
+def fit_autoformer_neuralforecast_exog(
+    train: pd.DataFrame,
+    exog_train: pd.DataFrame,
+    used_exog_columns: list[str],
+    target_col: str = "y",
+    horizon: int = 26,
+    input_size: int = 24,
+    hidden_size: int = 32,
+    n_head: int = 2,
+    encoder_layers: int = 1,
+    decoder_layers: int = 1,
+    conv_hidden_size: int = 32,
+    moving_avg_window: int = 13,
+    max_steps: int = 200,
+    random_seed: int = 42,
+) -> AutoformerNeuralForecastBundle:
+    """Fit NeuralForecast Autoformer with known future exogenous variables."""
+    if not used_exog_columns:
+        raise ValueError("At least one nonconstant exogenous variable is required.")
+
+    NeuralForecast, Autoformer, MAE, versions = _import_neuralforecast()
+    train_data = _with_datetime_index(train)
+    train_nf = prepare_neuralforecast_frame_with_exog(
+        train_data,
+        exog_train[used_exog_columns],
+        target_col=target_col,
+        include_y=True,
+    )
+
+    model = Autoformer(
+        h=horizon,
+        input_size=input_size,
+        futr_exog_list=used_exog_columns,
+        hidden_size=hidden_size,
+        n_head=n_head,
+        encoder_layers=encoder_layers,
+        decoder_layers=decoder_layers,
+        conv_hidden_size=conv_hidden_size,
+        MovingAvg_window=moving_avg_window,
+        max_steps=max_steps,
+        learning_rate=1e-3,
+        batch_size=1,
+        valid_batch_size=1,
+        windows_batch_size=32,
+        inference_windows_batch_size=32,
+        scaler_type="standard",
+        random_seed=random_seed,
+        loss=MAE(),
+        val_check_steps=10,
+        early_stop_patience_steps=3,
+        alias=EXOG_MODEL_NAME,
+        accelerator="cpu",
+        devices=1,
+        enable_checkpointing=False,
+        logger=False,
+        enable_progress_bar=False,
+        enable_model_summary=False,
+    )
+    nf = NeuralForecast(models=[model], freq="MS")
+
+    start = time.perf_counter()
+    nf.fit(df=train_nf, val_size=horizon)
+    train_seconds = time.perf_counter() - start
+
+    config = {
+        "model": EXOG_MODEL_NAME,
+        "spec_name": EXOG_SPEC_NAME,
+        "target_col": target_col,
+        "target_scale_training": "log",
+        "horizon": horizon,
+        "input_size": input_size,
+        "hidden_size": hidden_size,
+        "n_head": n_head,
+        "encoder_layers": encoder_layers,
+        "decoder_layers": decoder_layers,
+        "conv_hidden_size": conv_hidden_size,
+        "moving_avg_window": moving_avg_window,
+        "max_steps": max_steps,
+        "random_seed": random_seed,
+        "forecast_type": "conditional",
+        "information_set": "conditional_exog_known",
+        "used_exog_columns": ",".join(used_exog_columns),
+        "note": "NeuralForecast Autoformer with baseline_m4 future exogenous dummies; fixed B only.",
+    }
+
+    return AutoformerNeuralForecastBundle(
+        model=nf,
+        config=config,
+        versions=versions,
+        train_seconds=float(train_seconds),
+        train_index=train_data.index,
+        used_exog_columns=list(used_exog_columns),
     )
 
 
@@ -262,6 +413,55 @@ def forecast_autoformer_neuralforecast(
         split=split,
         forecast_type="unconditional",
         spec_name=spec_name or model_bundle.config.get("spec_name", SPEC_NAME),
+        target_col="number_parcels",
+        target_scale="original",
+        cutoff=model_bundle.train_index[-1],
+        horizons=list(range(1, len(test_data) + 1)),
+    )
+
+
+def forecast_autoformer_neuralforecast_exog(
+    model_bundle: AutoformerNeuralForecastBundle,
+    test: pd.DataFrame,
+    exog_test: pd.DataFrame,
+    split: str = "fixed_b",
+) -> pd.DataFrame:
+    """Conditionally forecast fixed B with known future exogenous variables."""
+    test_data = _with_datetime_index(test)
+    if "number_parcels" not in test_data.columns:
+        raise ValueError("test must contain 'number_parcels'.")
+
+    used_exog_columns = model_bundle.used_exog_columns or []
+    if not used_exog_columns:
+        raise ValueError("model_bundle must record used_exog_columns.")
+
+    futr_df = prepare_neuralforecast_frame_with_exog(
+        test_data,
+        exog_test[used_exog_columns],
+        target_col="y",
+        include_y=False,
+    )
+    forecast = model_bundle.model.predict(futr_df=futr_df)
+    if EXOG_MODEL_NAME not in forecast.columns:
+        raise ValueError(f"NeuralForecast output must contain '{EXOG_MODEL_NAME}'.")
+
+    forecast = forecast.sort_values("ds").reset_index(drop=True)
+    y_pred_log = forecast[EXOG_MODEL_NAME].to_numpy(dtype=float)
+    y_pred = np.exp(y_pred_log)
+
+    if len(y_pred) != len(test_data):
+        raise ValueError(
+            f"Forecast horizon length mismatch: got {len(y_pred)}, expected {len(test_data)}."
+        )
+
+    return make_forecast_frame(
+        dates=test_data.index,
+        y_true=test_data["number_parcels"].to_numpy(dtype=float),
+        y_pred=y_pred,
+        model=EXOG_MODEL_NAME,
+        split=split,
+        forecast_type="conditional",
+        spec_name=EXOG_SPEC_NAME,
         target_col="number_parcels",
         target_scale="original",
         cutoff=model_bundle.train_index[-1],
