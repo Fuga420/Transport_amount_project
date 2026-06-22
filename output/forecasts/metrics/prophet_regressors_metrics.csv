@@ -1,0 +1,2 @@
+model,split,forecast_type,spec_name,n,rmse,mae,mape,mase
+prophet_regressors,fixed_b,conditional,baseline_m4,26,17877.060334135716,13052.30911587842,3.201742217725325,1.0436150579502872
