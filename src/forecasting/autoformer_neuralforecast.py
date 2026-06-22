@@ -16,10 +16,12 @@ import numpy as np
 import pandas as pd
 
 from src.forecasting.forecast_utils import make_forecast_frame
+from src.forecasting.evaluation import evaluate_forecasts
 
 
 MODEL_NAME = "autoformer_neuralforecast"
 SPEC_NAME = "neuralforecast_autoformer_minimal"
+GRID_SPEC_NAME = "neuralforecast_autoformer_grid"
 
 
 def _install_ray_import_stubs() -> bool:
@@ -30,7 +32,10 @@ def _install_ray_import_stubs() -> bool:
     Windows + Python 3.13 may not have a compatible ray wheel.
     """
     try:
-        import ray  # noqa: F401
+        import ray
+
+        if getattr(ray, "__AUTOFORMER_NEURALFORECAST_STUB__", False):
+            return True
 
         return False
     except ImportError:
@@ -49,6 +54,7 @@ def _install_ray_import_stubs() -> bool:
     for name in module_names:
         sys.modules.setdefault(name, types.ModuleType(name))
 
+    sys.modules["ray"].__AUTOFORMER_NEURALFORECAST_STUB__ = True
     sys.modules["ray"].air = sys.modules["ray.air"]
     sys.modules["ray"].tune = sys.modules["ray.tune"]
 
@@ -154,6 +160,7 @@ def fit_autoformer_neuralforecast(
     moving_avg_window: int = 13,
     max_steps: int = 200,
     random_seed: int = 42,
+    spec_name: str = SPEC_NAME,
 ) -> AutoformerNeuralForecastBundle:
     """Fit a fixed-parameter NeuralForecast Autoformer on log-scale y."""
     NeuralForecast, Autoformer, MAE, versions = _import_neuralforecast()
@@ -196,7 +203,7 @@ def fit_autoformer_neuralforecast(
 
     config = {
         "model": MODEL_NAME,
-        "spec_name": SPEC_NAME,
+        "spec_name": spec_name,
         "target_col": target_col,
         "target_scale_training": "log",
         "horizon": horizon,
@@ -227,6 +234,7 @@ def forecast_autoformer_neuralforecast(
     model_bundle: AutoformerNeuralForecastBundle,
     test: pd.DataFrame,
     split: str = "fixed_b",
+    spec_name: str | None = None,
 ) -> pd.DataFrame:
     """Forecast fixed B and return the common forecast frame."""
     test_data = _with_datetime_index(test)
@@ -253,9 +261,98 @@ def forecast_autoformer_neuralforecast(
         model=MODEL_NAME,
         split=split,
         forecast_type="unconditional",
-        spec_name=SPEC_NAME,
+        spec_name=spec_name or model_bundle.config.get("spec_name", SPEC_NAME),
         target_col="number_parcels",
         target_scale="original",
         cutoff=model_bundle.train_index[-1],
         horizons=list(range(1, len(test_data) + 1)),
     )
+
+
+def run_autoformer_neuralforecast_grid_search(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    configs: list[dict],
+    target_col: str = "y",
+    split: str = "fixed_b",
+) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None, AutoformerNeuralForecastBundle | None]:
+    """Run a small manual grid search and keep failed configurations."""
+    rows: list[dict] = []
+    best_forecast: pd.DataFrame | None = None
+    best_metrics: pd.DataFrame | None = None
+    best_bundle: AutoformerNeuralForecastBundle | None = None
+
+    for config_id, config in enumerate(configs, start=1):
+        row = {
+            "config_id": config_id,
+            "model": MODEL_NAME,
+            "split": split,
+            "forecast_type": "unconditional",
+            "information_set": "unconditional",
+            "spec_name": GRID_SPEC_NAME,
+            "target_col": target_col,
+            "status": "failed",
+            "error": "",
+        }
+        row.update(config)
+
+        try:
+            start = time.perf_counter()
+            bundle = fit_autoformer_neuralforecast(
+                train=train,
+                target_col=target_col,
+                horizon=len(_with_datetime_index(test)),
+                input_size=int(config["input_size"]),
+                hidden_size=int(config["hidden_size"]),
+                max_steps=int(config["max_steps"]),
+                n_head=int(config.get("n_head", 2)),
+                encoder_layers=int(config.get("encoder_layers", 1)),
+                decoder_layers=int(config.get("decoder_layers", 1)),
+                conv_hidden_size=int(config.get("conv_hidden_size", config["hidden_size"])),
+                moving_avg_window=int(config.get("moving_avg_window", 13)),
+                random_seed=int(config.get("random_seed", 42)),
+                spec_name=GRID_SPEC_NAME,
+            )
+            forecast_df = forecast_autoformer_neuralforecast(
+                bundle,
+                test,
+                split=split,
+                spec_name=GRID_SPEC_NAME,
+            )
+            metrics_df = evaluate_forecasts(
+                forecast_df,
+                y_train=_with_datetime_index(train)["number_parcels"],
+            )
+            elapsed = time.perf_counter() - start
+
+            metrics_row = metrics_df.iloc[0].to_dict()
+            row.update(
+                {
+                    "status": "success",
+                    "training_time_seconds": bundle.train_seconds,
+                    "total_time_seconds": float(elapsed),
+                    "rmse": metrics_row.get("rmse"),
+                    "mae": metrics_row.get("mae"),
+                    "mape": metrics_row.get("mape"),
+                    "mase": metrics_row.get("mase"),
+                    **{f"version_{key}": value for key, value in bundle.versions.items()},
+                }
+            )
+
+            if best_metrics is None or float(metrics_row["rmse"]) < float(best_metrics.loc[0, "rmse"]):
+                best_forecast = forecast_df
+                best_metrics = metrics_df
+                best_bundle = bundle
+        except Exception as exc:  # noqa: BLE001 - grid search should record failures
+            row["error"] = f"{type(exc).__name__}: {exc}"
+            row["training_time_seconds"] = np.nan
+            row["total_time_seconds"] = np.nan
+            row["rmse"] = np.nan
+            row["mae"] = np.nan
+            row["mape"] = np.nan
+            row["mase"] = np.nan
+
+        rows.append(row)
+
+    grid_df = pd.DataFrame(rows)
+    return grid_df, best_forecast, best_metrics, best_bundle
