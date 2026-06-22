@@ -1,0 +1,2 @@
+model,split,forecast_type,spec_name,n,rmse,mae,mape,mase
+autoformer_neuralforecast,fixed_b,unconditional,neuralforecast_autoformer_minimal,26,32929.37335895951,24639.602782267488,6.262311559686054,1.9700928209098405
