@@ -1,0 +1,2 @@
+model,split,forecast_type,spec_name,n,rmse,mae,mape,mase
+autoformer_neuralforecast_exog,fixed_b,conditional,neuralforecast_autoformer_exog_baseline_m4,26,23967.15292140436,19986.69744948927,4.951847843731123,1.5980634715131654
