@@ -1,0 +1,2 @@
+split,model,forecast_type,information_set,spec_name,n,rmse,mae,mape,mase
+fixed_b,ssm_fixed_slope,conditional,conditional_exog_known,fixed_slope_m4,26,8135.054127029368,6728.931778139262,1.7109706675630598,0.538020856328281
