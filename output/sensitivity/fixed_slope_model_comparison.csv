@@ -1,0 +1,3 @@
+model_id,status,error,converged,warnflag,convergence_warning,nobs,log_likelihood,aic,bic,ljung_box_p_value_lag12,ljung_box_p_value_lag24,warning_messages
+baseline_m4,success,,True,0,False,287,584.0694369756319,-1124.1388739512638,-1043.6302652045522,2.192728096934034e-07,1.0819897412521067e-05,
+fixed_slope_m4,success,,True,0,False,287,584.0710110468422,-1126.1420220936843,-1049.2928955627322,2.1937287206310337e-07,1.0770698814868663e-05,
