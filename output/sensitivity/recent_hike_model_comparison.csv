@@ -1,0 +1,5 @@
+model_id,added_dummies,status,error,nobs,log_likelihood,aic,bic,converged,warnflag,convergence_warning,warning_messages,ljung_box_pvalue_lag12
+baseline_m4,none,success,,287,584.0694369756319,-1124.1388739512638,-1043.6302652045522,True,0,False,,2.192728096934034e-07
+baseline_m4_recent_hike_2023,recent_hike_2023_step,success,,287,584.1738804995891,-1122.3477609991783,-1038.179670036707,True,0,False,,1.8488930512752902e-07
+baseline_m4_recent_hike_2024,recent_hike_2024_step,success,,287,584.0802634701192,-1122.1605269402385,-1037.9924359777672,True,0,False,,2.0267573383653127e-07
+baseline_m4_recent_hike_2023_2024,"recent_hike_2023_step,recent_hike_2024_step",success,,287,584.1820221823065,-1120.364044364613,-1032.536471186382,False,2,True,Maximum Likelihood optimization failed to converge. Check mle_retvals,2.149349066432584e-07
