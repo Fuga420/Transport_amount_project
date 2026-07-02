@@ -1,0 +1,4 @@
+split,model,forecast_type,information_set,spec_name,n,rmse,mae,mape,mase
+covid_one_year,ssm_conditional_baseline_m4,conditional,conditional_exog_known,baseline_m4,27,18236.02154450503,14561.143941947954,3.670449408866974,1.1796610916956976
+covid_one_year,ssm_fixed_slope,conditional,conditional_exog_known,fixed_slope_m4,27,18244.596434220894,14565.324364585696,3.6715511372385947,1.1799997657691252
+covid_one_year,seasonal_naive,unconditional,unconditional,seasonal_naive,27,19347.94905007878,14410.296296296296,3.6146260998560606,1.1674402731213736

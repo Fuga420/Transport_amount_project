@@ -1,0 +1,4 @@
+split,model,forecast_type,information_set,spec_name,train_start,train_end,test_start,test_end,used_exog_columns,excluded_exog_columns,converged,warnflag,log_likelihood,aic,bic,status,error,warning_messages
+covid_one_year,seasonal_naive,unconditional,unconditional,seasonal_naive,2002-04-01,2021-02-01,2021-03-01,2023-05-01,,,,,,,,success,,seasonal naive uses recursive generated forecasts when prior-year source falls inside test
+covid_one_year,ssm_conditional_baseline_m4,conditional,conditional_exog_known,baseline_m4,2002-04-01,2021-02-01,2021-03-01,2023-05-01,"hike_dummy,covid_main,covid_wave1,covid_2021",post_stat_change,1.0,0.0,448.3698515734776,-854.7397031469552,-782.8157527798458,success,,
+covid_one_year,ssm_fixed_slope,conditional,conditional_exog_known,fixed_slope_m4,2002-04-01,2021-02-01,2021-03-01,2023-05-01,"hike_dummy,covid_main,covid_wave1,covid_2021",post_stat_change,1.0,0.0,448.3704435409577,-856.7408870819154,-788.2418867322873,success,,
