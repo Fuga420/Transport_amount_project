@@ -1,4 +1,7 @@
 spec_id,status,error,converged,warnflag,convergence_warning,nobs,log_likelihood,aic,bic,used_exog_cols,dropped_exog_cols
 TR0_local_linear,success,,True,0,False,287,584.0694369756319,-1124.1388739512638,-1043.6302652045522,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
 TR1_fixed_slope,success,,True,0,False,287,584.0710110468422,-1126.1420220936843,-1049.2928955627322,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
+TR1b_level_noise_050,success,,True,0,False,287,580.977392562486,-1121.954785124972,-1048.7651408097795,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
+TR1c_level_noise_025,success,,True,0,False,287,572.3346125769464,-1104.6692251538927,-1031.4795808387003,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
+TR1d_level_noise_010,success,,True,0,False,287,555.0309254164811,-1070.0618508329621,-996.8722065177697,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
 TR2_deterministic_linear,success,,False,2,True,287,531.0041640012389,-1022.0083280024778,-948.8186836872853,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",
