@@ -17,6 +17,21 @@
 \pagestyle{plain}
 \renewcommand{\thesection}{\arabic{section}.}
 
+% 原稿作成例の見出し階層：章（11 pt），節・項（10 pt）．
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {2\baselineskip}{\baselineskip}%
+  {\normalfont\gtfamily\bfseries\fontsize{11pt}{13pt}\selectfont}}
+\renewcommand{\thesubsection}{(\arabic{subsection})}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {\baselineskip}{0.5\baselineskip}%
+  {\normalfont\gtfamily\bfseries\fontsize{10pt}{12pt}\selectfont}}
+\renewcommand{\thesubsubsection}{\alph{subsubsection})}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{\z@}%
+  {0pt}{0pt}%
+  {\normalfont\gtfamily\bfseries\fontsize{10pt}{12pt}\selectfont}}
+\makeatother
+
 % 参考文献の引用は，上付きの右括弧付き番号とする．
 \makeatletter
 \renewcommand{\@cite}[2]{\textsuperscript{#1)}}
@@ -41,14 +56,14 @@ E-mail: author-b@example.jp（Corresponding Author）
 \begin{center}
   \begin{minipage}{150mm}
       \centering
-      {\gtfamily\bfseries\fontsize{20bp}{24bp}\selectfont \jtitle\par}
+      {\gtfamily\bfseries\fontsize{20pt}{24pt}\selectfont \jtitle\par}
       \vspace{15mm}
-      {\fontsize{12bp}{15bp}\selectfont \jauthors\par}
+      {\fontsize{12pt}{15pt}\selectfont \jauthors\par}
       \vspace{5mm}
-      {\fontsize{9bp}{12bp}\selectfont \jaffiliations\par}
+      {\fontsize{9pt}{12pt}\selectfont \jaffiliations\par}
       \vspace{10mm}
       \raggedright
-      {\fontsize{9bp}{12bp}\selectfont
+      {\fontsize{9pt}{12pt}\selectfont
       \textbf{要旨：}本研究は，後続統計を接続した日本の宅配便取扱個数の月次系列を対象に，COVID-19期，統計接続後および運賃改定期にみられる構造変化を状態空間モデルにより分解するための分析枠組みを整理するものである．モデルはトレンド，季節成分，イベント効果および統計接続補正を同時に扱う．本稿では，データ接続の考え方，モデル仕様，頑健性確認および予測評価を順次整理する．\par}
       \vspace{\baselineskip}
       {\rmfamily\bfseries\itshape Key Words:\ }\textit{parcel delivery, structural time series, state space model, COVID-19, statistical linkage}\par
@@ -92,17 +107,21 @@ E-mail: author-b@example.jp（Corresponding Author）
 \bibliography{references}
 
 \end{multicols}
+\begin{flushright}
+{\bfseries\fontsize{10pt}{12pt}\selectfont (Received ?)}\\
+{\bfseries\fontsize{10pt}{12pt}\selectfont (Accepted ?)}
+\end{flushright}
 \vspace{10mm}
 \begin{center}
 \begin{minipage}{150mm}
 \centering
-{\bfseries\fontsize{12bp}{15bp}\selectfont
+{\bfseries\fontsize{12pt}{15pt}\selectfont
 STRUCTURAL CHANGE DECOMPOSITION OF A LINKED JAPANESE PARCEL-VOLUME SERIES\par}
 \vspace{\baselineskip}
-{\fontsize{12bp}{15bp}\selectfont Author A and Author B\par}
+{\fontsize{12pt}{15pt}\selectfont Author A and Author B\par}
 \vspace{\baselineskip}
 \raggedright
-{\fontsize{10bp}{13bp}\selectfont
+{\fontsize{10pt}{13pt}\selectfont
 This provisional manuscript provides a writing environment for a study of monthly Japanese parcel volumes linked to successor statistics. The planned analysis uses a structural time-series model to distinguish trend, seasonality, COVID-19-related effects, a post-linkage level adjustment, and price-revision periods. The full manuscript will document the data linkage, estimate the model, examine robustness to trend specifications and level-noise constraints, and report limited retrospective forecast evaluations. This abstract is a placeholder only and will be replaced after the empirical results and their interpretation have been finalized.\par}
 \end{minipage}
 \end{center}

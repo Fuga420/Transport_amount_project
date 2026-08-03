@@ -1,0 +1,57 @@
+{
+  "latex-workshop.latex.build.enableMagicComments": false,
+  "latex-workshop.latex.recipe.default": "uplatex -> upbibtex -> uplatex x2 -> dvipdfmx",
+  "latex-workshop.latex.autoBuild.run": "never",
+  "latex-workshop.latex.outDir": "%DIR%",
+  "latex-workshop.latex.auxDir": "%OUTDIR%",
+  "latex-workshop.latex.tools": [
+    {
+      "name": "uplatex",
+      "command": "uplatex",
+      "args": [
+        "-interaction=nonstopmode",
+        "-synctex=1",
+        "%DOCFILE_EXT%"
+      ],
+      "cwd": "%DIR%"
+    },
+    {
+      "name": "upbibtex",
+      "command": "upbibtex",
+      "args": [
+        "%DOCFILE%"
+      ],
+      "cwd": "%DIR%"
+    },
+    {
+      "name": "dvipdfmx",
+      "command": "dvipdfmx",
+      "args": [
+        "%DOCFILE%.dvi"
+      ],
+      "cwd": "%DIR%"
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "uplatex -> upbibtex -> uplatex x2 -> dvipdfmx",
+      "tools": [
+        "uplatex",
+        "upbibtex",
+        "uplatex",
+        "uplatex",
+        "dvipdfmx"
+      ]
+    }
+  ],
+  "latex-workshop.latex.clean.method": "glob",
+  "latex-workshop.latex.clean.fileTypes": [
+    "*.aux",
+    "*.bbl",
+    "*.blg",
+    "*.dvi",
+    "*.log",
+    "*.synctex.gz"
+  ],
+  "latex-workshop.latex.autoClean.run": "never"
+}

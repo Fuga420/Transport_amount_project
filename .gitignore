@@ -13,7 +13,9 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Other common IDE/OS generated files
-.vscode/
+# Share only the LaTeX Workshop recipe; keep other local VS Code settings untracked.
+.vscode/*
+!.vscode/settings.json
 .DS_Store
 Thumbs.db
 

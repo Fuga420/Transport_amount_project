@@ -7,7 +7,7 @@
 - 土木学会論文集編集委員会「原稿作成上の注意」：<https://committees.jsce.or.jp/jjsce/notes>
 - 土木学会論文集編集委員会「PDFファイルの作成の手引」：<https://next.committees.jsce.or.jp/jjsce/ptebiki>
 
-ユーザー指定の `docs/jsce_submission_rules_only.md` および `style_wabun_20220101_0.pdf` は，この作業領域内では確認できなかった。そのため本環境では，上記の公式公開資料を参照した。これらのローカルファイルが後から追加された場合は，内容を再照合する。
+`docs/jsce_submission_rules_only.md` は作業領域内では確認できなかった。一方，2026年8月3日にユーザー指定の `C:\Users\fugat\Downloads\style_wabun_20220101_0.pdf` を直接確認した。公式公開版と同じ3ページの作成例であり，本文の余白，タイトル部，見出し，図表，REFERENCESおよび英文要旨の規定を本環境へ再照合した。参照PDFは作業ディレクトリへ複製していない。
 
 ## `main.tex` で反映した事項
 
@@ -20,10 +20,12 @@
 | タイトル | ゴシック体，20 pt相当 |
 | 著者名 | 明朝体，12 pt相当 |
 | 所属・和文要旨 | 明朝体，9 pt相当 |
+| 見出し | 章：ゴシック体11 pt相当，節・項：ゴシック体10 pt相当 |
 | 和文要旨 | 350字以内の仮文 |
 | キーワード | 5語の仮置き，イタリック体 |
 | 参考文献 | 原稿末尾に `REFERENCES` を置き，BibTeXで出力 |
 | 英文要旨 | 最終部を1段組に戻し，左右30 mm相当の幅で配置。300語以内の仮文 |
+| Received / Accepted | 初回投稿用の`?`を最終ページ右寄せで仮置き |
 
 ## ビルド確認
 
@@ -37,9 +39,17 @@ uplatex main.tex
 dvipdfmx main.dvi
 ```
 
-結果：2026年8月3日にTeX Live 2025で正常終了した。`main.pdf` はA4・2ページ・約93 KBであり，`pdffonts` により使用フォントがすべて埋め込み済みであることを確認した。
+結果：2026年8月3日にTeX Live 2025で正常終了した。`main.pdf` はA4・3ページ・約94 KBであり，`pdffonts` により使用フォントがすべて埋め込み済みであることを確認した。
 
-Computer Modernの利用可能な近傍サイズへの置換警告は出るが，未定義参照・コンパイルエラーは最終回のビルドでは出ていない。英文要旨を最終ページの2段組本文・REFERENCESの後に置くため，本文部には `multicols` を使用している。実際の原稿量・図表を入れた段階で，最終ページの左右段の高さと英文要旨直前の約10 mmの空白を目視調整する。
+Computer Modernの利用可能な近傍サイズへの置換警告は出るが，未定義参照・コンパイルエラーは最終回のビルドでは出ていない。英文要旨を最終ページの2段組本文・REFERENCESの後に置くため，本文部には `multicols` を使用している。現時点の本文は章ごとの仮注記のみのため，英文要旨が独立した第3ページとなる。実際の原稿量・図表を入れた段階で，最終ページの左右段の高さと英文要旨直前の約10 mmの空白を目視調整する。
+
+## VS Code / LaTeX Workshop
+
+プロジェクト直下の `.vscode/settings.json` に，`uplatex -> upbibtex -> uplatex x2 -> dvipdfmx` を唯一のrecipeかつ既定recipeとして設定した。`main.tex` にある `% !TeX program = uplatex` がrecipeより優先されて1回だけ実行されないよう，LaTeX Workshopのmagic commentによるビルド指定は無効化している。
+
+`.vscode/settings.json` はルート `.gitignore` の例外としてGit管理し，このrecipeをプロジェクト利用者間で共有する。その他の `.vscode/` 配下のローカル設定は引き続きGit管理しない。
+
+自動ビルドおよび自動cleanは無効化し，保存中のファイル変更とビルドが競合しないようにした。VS Codeでは `paper_jsce/main.tex` を開いた状態で「Build LaTeX project」を実行する。補助ファイルの削除は，LaTeX Workshopの「Clean up auxiliary files」から手動で実行でき，`*.aux`，`*.bbl`，`*.blg`，`*.dvi`，`*.log`，`*.synctex.gz` のみを対象とする。clean方式は `latexmk` ではなくglob方式である。
 
 ## 投稿前に確認する事項
 
