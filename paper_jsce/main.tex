@@ -1,0 +1,110 @@
+% !TeX program = uplatex
+% 土木学会論文集（和文）投稿用の暫定ドラフト
+% 本ファイルは公式配布テンプレートそのものではない．投稿前には最新版の
+% 原稿作成例および投稿要項と照合すること．詳細は build_check.md を参照．
+\documentclass[uplatex,a4paper,10pt]{jsarticle}
+
+\usepackage[top=19mm,bottom=24mm,left=20mm,right=20mm,footskip=8mm]{geometry}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{url}
+
+% 土木学会論文集和文原稿作成例に合わせた基本設定．
+\setlength{\columnsep}{6mm}
+\renewcommand{\baselinestretch}{1.25}\selectfont
+\pagestyle{plain}
+\renewcommand{\thesection}{\arabic{section}.}
+
+% 参考文献の引用は，上付きの右括弧付き番号とする．
+\makeatletter
+\renewcommand{\@cite}[2]{\textsuperscript{#1)}}
+\makeatother
+
+\newcommand{\draftnote}[1]{\par\noindent\textit{［#1］}\par}
+
+\newcommand{\jtitle}{
+後続統計を接続した宅配便取扱個数系列の構造変化分解
+}
+\newcommand{\jauthors}{著者A\textsuperscript{1}・著者B\textsuperscript{2}}
+\newcommand{\jaffiliations}{
+\textsuperscript{1}正会員　所属・役職（〒000-0000　住所）\\
+E-mail: author-a@example.jp\\
+\textsuperscript{2}正会員　所属・役職（〒000-0000　住所）\\
+E-mail: author-b@example.jp（Corresponding Author）
+}
+
+\begin{document}
+
+% タイトル部分は本文より左右10 mmずつ狭い1段組とする．
+\begin{center}
+  \begin{minipage}{150mm}
+      \centering
+      {\gtfamily\bfseries\fontsize{20bp}{24bp}\selectfont \jtitle\par}
+      \vspace{15mm}
+      {\fontsize{12bp}{15bp}\selectfont \jauthors\par}
+      \vspace{5mm}
+      {\fontsize{9bp}{12bp}\selectfont \jaffiliations\par}
+      \vspace{10mm}
+      \raggedright
+      {\fontsize{9bp}{12bp}\selectfont
+      \textbf{要旨：}本研究は，後続統計を接続した日本の宅配便取扱個数の月次系列を対象に，COVID-19期，統計接続後および運賃改定期にみられる構造変化を状態空間モデルにより分解するための分析枠組みを整理するものである．モデルはトレンド，季節成分，イベント効果および統計接続補正を同時に扱う．本稿では，データ接続の考え方，モデル仕様，頑健性確認および予測評価を順次整理する．\par}
+      \vspace{\baselineskip}
+      {\rmfamily\bfseries\itshape Key Words:\ }\textit{parcel delivery, structural time series, state space model, COVID-19, statistical linkage}\par
+      \vspace{10mm}
+  \end{minipage}
+\end{center}
+
+% multicols を用いることで，最終ページの2段組を揃えた後に英文要旨を置く．
+\begin{multicols}{2}
+
+\section{はじめに}
+\draftnote{統計接続を伴う月次宅配便取扱個数系列を対象とする研究課題，既往研究との関係，および本研究の貢献を記述する．}
+
+\section{使用データ}
+\draftnote{旧系列と後続統計の出典，対象期間，接続時点，目的変数およびイベント期間の定義を記述する．}
+
+\section{分析方法}
+\draftnote{局所水準・固定傾き・季節成分・イベントダミー・統計接続補正項からなる状態空間モデルを記述する．}
+
+\section{構造変化の推定結果}
+\draftnote{観測値と適合値，トレンド・季節成分，COVID期の主効果・初期波・2021年効果，ならびに統計接続後の水準差を提示する．}
+
+\section{頑健性確認}
+\draftnote{固定傾き仕様，トレンドの硬さ，水準ノイズ制約およびCOVID主効果の期間設定に対する感度を整理する．}
+
+\section{予測評価}
+\draftnote{COVID one-yearおよびfixed Bの予測評価を，構造分解結果を補う限定的な検証として記述する．}
+
+\section{考察}
+\draftnote{需要イベントと統計接続補正を区別して解釈する範囲，ならびに物流計画上の含意と限界を整理する．}
+
+\section{結論}
+\draftnote{主要な知見，方法上の貢献，および今後の課題を簡潔にまとめる．}
+
+% 実際の本文で引用を開始したら \nocite を削除し，引用箇所に \cite を置く．
+\nocite{harvey1989,durbin2012,mlit2026}
+\begin{center}
+{\gtfamily\bfseries REFERENCES}
+\end{center}
+\bibliographystyle{jplain}
+\bibliography{references}
+
+\end{multicols}
+\vspace{10mm}
+\begin{center}
+\begin{minipage}{150mm}
+\centering
+{\bfseries\fontsize{12bp}{15bp}\selectfont
+STRUCTURAL CHANGE DECOMPOSITION OF A LINKED JAPANESE PARCEL-VOLUME SERIES\par}
+\vspace{\baselineskip}
+{\fontsize{12bp}{15bp}\selectfont Author A and Author B\par}
+\vspace{\baselineskip}
+\raggedright
+{\fontsize{10bp}{13bp}\selectfont
+This provisional manuscript provides a writing environment for a study of monthly Japanese parcel volumes linked to successor statistics. The planned analysis uses a structural time-series model to distinguish trend, seasonality, COVID-19-related effects, a post-linkage level adjustment, and price-revision periods. The full manuscript will document the data linkage, estimate the model, examine robustness to trend specifications and level-noise constraints, and report limited retrospective forecast evaluations. This abstract is a placeholder only and will be replaced after the empirical results and their interpretation have been finalized.\par}
+\end{minipage}
+\end{center}
+
+\end{document}
