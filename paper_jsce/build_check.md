@@ -51,6 +51,8 @@ Computer Modernの利用可能な近傍サイズへの置換警告は出るが�
 
 自動ビルドおよび自動cleanは無効化し，保存中のファイル変更とビルドが競合しないようにした。VS Codeでは `paper_jsce/main.tex` を開いた状態で「Build LaTeX project」を実行する。補助ファイルの削除は，LaTeX Workshopの「Clean up auxiliary files」から手動で実行でき，`*.aux`，`*.bbl`，`*.blg`，`*.dvi`，`*.log`，`*.synctex.gz` のみを対象とする。clean方式は `latexmk` ではなくglob方式である。
 
+LaTeX作業中は関係ないNotebookタブを閉じ，VS Codeの自動保存を無効にする。NotebookはLaTeX原稿の依存ファイルではないため，保存競合や実行出力の更新が発生した場合も，原稿ビルドとは切り分けて扱う。
+
 ## 投稿前に確認する事項
 
 1. 投稿先が通常号か特集号かを確定し，対象小委員会の個別要項が通常号要項より優先しないか確認する。
