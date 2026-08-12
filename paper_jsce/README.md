@@ -5,6 +5,10 @@
 現時点では，本文を執筆せず，章構成，和文・英文要旨の仮文，参考文献処理，および図表の配置先だけを用意しています。
 最終ページの`Received`・`Accepted`欄は初回投稿用の`?`の仮置きです。
 
+## 著者情報の仮置き
+
+著者名は寺嶋風雅，赤羽根悠吾，冬木拓実，樋口知之の仮配置である。所属，会員区分，E-mail，Corresponding Authorは未確定のため，`main.tex` では要確認と明示している。英文著者名のローマ字表記（Fuga TERASHIMA，Yugo AKABANE，Takumi FUYUKI，Tomoyuki HIGUCHI）は仮置きであり，投稿前に本人・所属の正式表記を確認する。
+
 ## 構成
 
 - `main.tex`：和文原稿の最小ドラフト

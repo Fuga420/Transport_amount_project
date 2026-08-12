@@ -13,7 +13,7 @@
 
 % 土木学会論文集和文原稿作成例に合わせた基本設定．
 \setlength{\columnsep}{6mm}
-\renewcommand{\baselinestretch}{1.25}\selectfont
+\linespread{0.96}\selectfont
 \pagestyle{plain}
 \renewcommand{\thesection}{\arabic{section}.}
 
@@ -40,14 +40,17 @@
 \newcommand{\draftnote}[1]{\par\noindent\textit{［#1］}\par}
 
 \newcommand{\jtitle}{
-後続統計を接続した宅配便取扱個数系列の構造変化分解
+宅配便取扱個数の構造変化に関する時系列分析\\
+―状態空間モデルによる分解と予測評価―
 }
-\newcommand{\jauthors}{著者A\textsuperscript{1}・著者B\textsuperscript{2}}
+\newcommand{\jauthors}{
+寺嶋 風雅\textsuperscript{1}・赤羽根 悠吾\textsuperscript{2}・冬木 拓実\textsuperscript{1}・樋口 知之\textsuperscript{3}
+}
 \newcommand{\jaffiliations}{
-\textsuperscript{1}正会員　所属・役職（〒000-0000　住所）\\
-E-mail: author-a@example.jp\\
-\textsuperscript{2}正会員　所属・役職（〒000-0000　住所）\\
-E-mail: author-b@example.jp（Corresponding Author）
+\textsuperscript{1}会員区分：非会員　所属1：中央大学大学院\\
+\textsuperscript{2}会員区分：非会員　所属2：中央大学\\
+\textsuperscript{3}会員区分：非会員　所属3：中央大学理工学術院\\
+E-mail：要確認　Corresponding Author：要確認
 }
 
 \begin{document}
@@ -64,9 +67,9 @@ E-mail: author-b@example.jp（Corresponding Author）
       \vspace{10mm}
       \raggedright
       {\fontsize{9pt}{12pt}\selectfont
-      \textbf{要旨：}本研究は，後続統計を接続した日本の宅配便取扱個数の月次系列を対象に，COVID-19期，統計接続後および運賃改定期にみられる構造変化を状態空間モデルにより分解するための分析枠組みを整理するものである．モデルはトレンド，季節成分，イベント効果および統計接続補正を同時に扱う．本稿では，データ接続の考え方，モデル仕様，頑健性確認および予測評価を順次整理する．\par}
+      \textbf{要旨：}本研究は，日本の宅配便取扱個数の月次系列を対象に，状態空間モデルを用いて構造変化をトレンド，季節成分およびイベント効果に分解する分析枠組みを提示する．後続統計への接続を行った系列について，COVID-19期，統計接続後および運賃改定期をイベントとして扱う．さらに，トレンド仕様等のモデル仕様に対する推定結果の頑健性を確認し，限定的な予測評価を行う．結果の解釈は今後の分析に基づき整理する．\par}
       \vspace{\baselineskip}
-      {\rmfamily\bfseries\itshape Key Words:\ }\textit{parcel delivery, structural time series, state space model, COVID-19, statistical linkage}\par
+      {\bfseries キーワード：}\textit{宅配便取扱個数，状態空間モデル，構造変化，時系列分析，予測評価}\par
       \vspace{10mm}
   \end{minipage}
 \end{center}
@@ -75,28 +78,175 @@ E-mail: author-b@example.jp（Corresponding Author）
 \begin{multicols}{2}
 
 \section{はじめに}
-\draftnote{統計接続を伴う月次宅配便取扱個数系列を対象とする研究課題，既往研究との関係，および本研究の貢献を記述する．}
+\draftnote{本章では，宅配便取扱個数の構造変化を対象とする問題設定，既往研究との関係，および本研究の位置付けを述べる．}
 
-\section{使用データ}
-\draftnote{旧系列と後続統計の出典，対象期間，接続時点，目的変数およびイベント期間の定義を記述する．}
+\section{使用データとイベント設定}
+
+\subsection{使用データ}
+本研究では，国土交通省「トラック輸送情報」に掲載された宅配便貨物取扱個数と，同統計の廃止後に国土交通省「国土交通月例経済」（交通分野）で公表される宅配便貨物取扱個数を用いる．前者は2002年4月から2022年7月までの244か月，後者は2022年8月から2026年2月までの43か月であり，分析対象は計287か月の月次系列である．分析用データの \texttt{number\_parcels} は千個単位で記録されている．旧統計の宅配貨物取扱事業者は2022年7月時点で大手14社であるのに対し，後続統計はヤマト運輸，SGホールディングスおよび日本郵便の大手3社に基づく．したがって，両系列は同じ母集団を観測した完全に同質な系列ではない．
+
+\subsection{統計接続と目的変数}
+接続済み系列では，2022年7月までの旧統計と2022年8月以降の後続統計の \texttt{number\_parcels} を月次で直接連結する．保存されているデータおよび作成履歴からは，比率補正又は水準合わせを行った処理は確認されない．そこで，後続統計への切替後に生じ得る対象範囲・集計方法の差を需要変化と区別するため，2022年8月以降を1とする \texttt{post\_stat\_change} を状態空間モデルに含める．これは統計接続に伴う水準補正項であり，需要減少又は統計変更の因果効果を表すものではない．
+
+目的変数は，接続済み宅配便取扱個数の自然対数として，次式で定義する．
+\begin{equation}
+y_t=\log(\texttt{number\_parcels}_t)．
+\end{equation}
+この変換により，イベント係数は対数取扱個数に対する比率的な水準差として読みやすくなる．ただし，本研究の目的は観測された時系列の構造分解であり，係数を宅配需要に対する事象の因果効果として解釈するものではない．
+
+% 表-1は可読性を優先して二段抜きとする．
+\end{multicols}
+\begin{table}[t]
+\caption{使用データおよびイベント変数の定義}
+\label{tab:data-events}
+\centering
+\small
+\renewcommand{\arraystretch}{0.94}
+\setlength{\tabcolsep}{1.8pt}
+\begin{tabular}{p{0.21\textwidth}p{0.42\textwidth}p{0.30\textwidth}}
+\toprule
+\multicolumn{3}{l}{\textbf{(a) 使用データ・目的変数}} \\
+区分 & 内容 & 本研究での扱い \\
+\midrule
+旧統計 & 国土交通省「トラック輸送情報」の宅配便貨物取扱個数．2002年4月--2022年7月，244か月，千個． & 2022年7月時点では大手14社．長期系列内の対象事業者数の変化に留意する． \\
+後続統計 & 国土交通省「国土交通月例経済」（交通分野）の宅配便貨物取扱個数．2022年8月--2026年2月，43か月，千個． & ヤマト運輸，SGホールディングス，日本郵便の大手3社に基づく． \\
+接続済み系列 & 旧統計と後続統計を2022年8月で直接連結した \texttt{number\_parcels}．2002年4月--2026年2月，287か月． & 比率補正・水準合わせは確認されていない．後続統計期間を \texttt{post\_stat\_change}=1 とする． \\
+目的変数 & $y_t=\log(\texttt{number\_parcels}_t)$ & 状態空間モデルでは対数取扱個数を用いる． \\
+\bottomrule
+\end{tabular}
+
+\vspace{1mm}
+\begin{tabular}{p{0.28\textwidth}p{0.22\textwidth}p{0.42\textwidth}}
+\toprule
+\multicolumn{3}{l}{\textbf{(b) イベント変数（該当月を1，それ以外を0）}} \\
+変数名 & 期間 & モデル上の役割・解釈 \\
+\midrule
+\texttt{hike\_dummy} & 2017年10月--2019年12月 & 操作的に設定した運賃改定期の水準差を制御する期間ダミーである． \\
+\texttt{covid\_main} & 2020年3月--2023年5月 & COVID期に対応する主たる水準差（M4）である． \\
+\texttt{covid\_wave1} & 2020年4月--2020年5月 & 初期波に対応する追加的な短期水準差であり，\texttt{covid\_main} と重複する． \\
+\texttt{covid\_2021} & 2021年1月--2021年9月 & 操作的に設定した2021年局面の追加的な水準差であり，\texttt{covid\_main} と重複する． \\
+\texttt{post\_stat\_change} & 2022年8月以降 & 後続統計への接続に伴う水準補正であり，需要減少を表す変数ではない． \\
+\bottomrule
+\end{tabular}
+\par\vspace{1mm}\footnotesize
+注1：旧統計には2018年4月の一部事業者における集計方法変更により，それ以前との時系列上の連続性が担保されない旨の注記がある．
+\par
+注2：イベントダミーは指定期間に対応するモデル上の水準差を表すものであり，各事象の因果効果を示すものではない．
+\end{table}
+\begin{multicols}{2}
+
+\subsection{イベント変数}
+主仕様では，表-\ref{tab:data-events}に示す5個の期間ダミーを用いる．\texttt{hike\_dummy} は2017年10月から2019年12月まで，\texttt{covid\_main} は2020年3月から2023年5月まで（M4），\texttt{covid\_wave1} は2020年4月から5月まで，\texttt{covid\_2021} は2021年1月から9月まで，\texttt{post\_stat\_change} は2022年8月以降を1とする．\texttt{covid\_wave1} および \texttt{covid\_2021} は \texttt{covid\_main} と重複し，COVID期に対応する持続的な水準差に対して，初期波および2021年局面の追加的な水準差を表現する．\texttt{covid\_main} の終点である2023年5月は，COVID-19の5類感染症移行時期までを含めるM4として設定したものであり，その選択の頑健性は第5章で確認する．
+
+各ダミーは，指定期間に対応するモデル上の水準差を表す変数である．観測されない需要要因，事業者別の料金・サービス変更，その他の社会経済要因を網羅的に統制するものではないため，運賃改定期又はCOVID期の因果効果を示すものではない．また，旧統計を全期間にわたり同一定義の系列とみなさないことに留意する．
 
 \section{分析方法}
-\draftnote{局所水準・固定傾き・季節成分・イベントダミー・統計接続補正項からなる状態空間モデルを記述する．}
 
-\section{構造変化の推定結果}
-\draftnote{観測値と適合値，トレンド・季節成分，COVID期の主効果・初期波・2021年効果，ならびに統計接続後の水準差を提示する．}
+\subsection{状態空間モデルの構成}
+第2章で定義した対数宅配便取扱個数を，トレンド，月次季節成分，イベントに対応する水準差および観測誤差に分解する．時点$t$の観測方程式を次式で表す．
+\begin{equation}
+y_t=\mu_t+\gamma_t+\boldsymbol{\beta}^{\prime}\boldsymbol{d}_t+\varepsilon_t .
+\end{equation}
+ここで，$y_t$は$\log(\texttt{number\_parcels}_t)$，$\mu_t$はトレンド成分，$\gamma_t$は季節成分，$\boldsymbol{d}_t$はイベントダミーのベクトル，$\boldsymbol{\beta}$はその係数ベクトル，$\varepsilon_t$は観測誤差である．本研究では，これらの成分を状態空間表現により同時に推定することで，長期的な変動と特定期間に対応する水準差とを区別する．
 
-\section{頑健性確認}
-\draftnote{固定傾き仕様，トレンドの硬さ，水準ノイズ制約およびCOVID主効果の期間設定に対する感度を整理する．}
+\subsection{トレンドおよび季節成分}
+主仕様TR0 / \texttt{baseline\_m4}のトレンドには，水準と傾きの双方の時間的変化を許すlocal linear trendを用いる．状態方程式は次式である．
+\begin{equation}
+\label{eq:trend-level}
+\mu_{t+1}=\mu_t+\delta_t+\eta_{\mu,t},
+\end{equation}
+\begin{equation}
+\label{eq:trend-slope}
+\delta_{t+1}=\delta_t+\eta_{\delta,t}.
+\end{equation}
+ここで，$\delta_t$はトレンドの傾き，$\eta_{\mu,t}$および$\eta_{\delta,t}$は，それぞれ水準および傾きの状態擾乱である．この構造により，トレンドは月次系列の長期的な変動に応じて水準と傾きを変化させることができる．季節成分$\gamma_t$は，12か月周期の繰返しを表す月次の状態成分として導入する．季節性をトレンドやイベント効果から分離することにより，特定月に集中する変動をイベントに帰属させすぎないようにする．
+
+\subsection{イベント効果と係数の解釈}
+イベントダミーのベクトルは，
+\begin{equation}
+\label{eq:event-vector}
+\boldsymbol{d}_t=
+\begin{pmatrix}
+\texttt{hike\_dummy}_t \\
+\texttt{covid\_main}_t \\
+\texttt{covid\_wave1}_t \\
+\texttt{covid\_2021}_t \\
+\texttt{post\_stat\_change}_t
+\end{pmatrix}
+\end{equation}
+とする．各変数が1となる期間は表-\ref{tab:data-events}に示したとおりである．\texttt{covid\_wave1}および\texttt{covid\_2021}は\texttt{covid\_main}と重複し，COVID期に対応する持続的な水準差に加えて，初期波および2021年局面の追加的な水準差を表現する．\texttt{post\_stat\_change}は後続統計への接続に伴う水準補正を表す変数であり，宅配需要の減少を意味する変数としては扱わない．
+
+目的変数が対数尺度であるため，イベント変数$j$の係数$\beta_j$は，必要に応じて$\exp(\beta_j)-1$により比率的な水準差へ換算できる．ただし，これらの係数は指定期間に対応するモデル上の水準差である．観測されない需要要因，事業者別の料金・サービス変更および他の社会経済要因を網羅的に統制するものではないため，各事象の因果効果として解釈しない．
+
+\subsection{比較仕様}
+第5章では，トレンド仮定に対する主結果の頑健性を確認する．TR1 / \texttt{fixed\_slope\_m4}は，式(\ref{eq:trend-level})の水準擾乱を残したまま，式(\ref{eq:trend-slope})の傾き擾乱を0に固定する固定傾き仕様である．したがって，TR0とTR1の差は，傾きの時間変化を許すか否かにある．両仕様では，季節成分および式(\ref{eq:event-vector})のイベントダミーを共通に用いる．
+
+さらに，TR1b，TR1cおよびTR1dでは，水準ノイズを段階的に制約することで，より硬いトレンド仮定に対する感度を確認する．TR2は，決定的線形トレンドを置く参考仕様であり，推定の収束性に留意して第5章で補助的に扱う．これらの比較仕様は主仕様の置換を目的とするものではなく，イベント係数および分解結果がトレンドの柔軟性にどの程度依存するかを確認するために用いる．
+
+\subsection{推定，診断および予測評価}
+パラメータは状態空間モデルの尤度に基づき推定する．仕様間の比較には，対数尤度，AICおよびBICを用いる．また，残差に自己相関が残らないかを確認するため，Ljung--Box検定等の残差診断を行う．これらの診断結果は，係数および分解結果の解釈範囲を検討するための情報として第4章および第5章で示す．
+
+予測面からの補助的な検証として，第6章ではfixed Bの評価を行う．fixed Bでは，2002年4月から2023年12月を学習期間，2024年1月から2026年2月を評価期間とする．予測精度は原系列の取扱個数尺度でRMSE，MAE，MAPEおよびMASEにより評価する．状態空間モデルのfixed B conditional forecastでは，評価期間における式(\ref{eq:event-vector})の外生ダミーを既知として与える．この評価は，既知のイベント情報を条件とした予測であり，将来のイベント発生を無条件に予測する実運用上の精度を直接表すものではない．したがって，外生情報を用いない予測との比較では，情報条件の違いを区別して解釈する．
+
+\section{状態空間モデルによる構造変化の推定結果}
+
+本章では，第2章で定義した接続済み宅配便取扱個数系列に対するTR0 / \texttt{baseline\_m4}の推定結果を示す．係数は，\texttt{fixed\_slope\_coefficients.csv}の\texttt{model\_id=baseline\_m4}行に基づく．
+
+\begin{center}
+  \includegraphics[width=0.95\linewidth]{figures/section4_tr0_components_column.png}
+  \refstepcounter{figure}\label{fig:section4-tr0-components}\\[-1mm]
+  {\small 図\thefigure\quad TR0の成分分解}
+\end{center}
+\subsection{主仕様の適合と成分分解}
+TR0は287か月の対数系列に対して収束し，収束フラグは\texttt{True}，\texttt{warnflag}は0であった．対数尤度は584.0694である．観測値と適合値，トレンド，季節成分および残差を図\ref{fig:section4-tr0-components}に示す．
+
+観測値と適合値は，月次の季節変動と長期的な水準上昇に概ね追随している．ただし，適合値と観測値の差が全期間で小さいことを意味するものではなく，残差診断を踏まえて解釈する必要がある．トレンド成分は長期的な上昇を基本としつつ時期により水準の変化を示し，季節成分は月次の周期変動を表している．これらを状態成分として明示的に分離することで，季節的な変動をイベント項や長期トレンドに過度に帰属させることを避けている．
+
+残差は平均の周囲で変動し，一部の時点で比較的大きな正負の乖離を示す．残差標準偏差は0.01072，RMSEは0.01070である．これらは対数尺度の値であり，原系列の個数単位の誤差ではない．
+
+\subsection{イベント係数の推定結果}
+イベント係数を表\ref{tab:section4-tr0-coefficients}に示す．推定値は対数尺度であり，比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$により計算した．各係数は指定期間に対応するモデル上の水準差であり，イベントの因果効果を表すものではない．
+
+\texttt{hike\_dummy}は負方向の水準差（-2.308\%）であるが，これは指定した運賃改定期に対応する条件付きの値であり，運賃改定による需要の因果的変化や価格弾力性を推定したものではない．\texttt{covid\_main}は+3.094\%，\texttt{covid\_wave1}は+5.253\%，\texttt{covid\_2021}は+1.631\%であり，初期波の指定期間に対応する水準差が相対的に大きい．これらも固定期間を設定したモデル上の関係として解釈する．
+
+\begin{center}
+  \refstepcounter{table}\label{tab:section4-tr0-coefficients}
+  {\small 表\thetable\quad TR0のイベント係数推定結果\par}
+  \vspace{0.5mm}
+  \footnotesize
+  \renewcommand{\arraystretch}{0.90}
+  \setlength{\tabcolsep}{2pt}
+  \begin{tabular}{lrrrr}
+    \toprule
+    変数 & 推定値 & 標準誤差 & $p$値 & 比率換算値 \\
+    \midrule
+    \texttt{hike\_dummy} & -0.02335 & 0.02721 & 0.3909 & -2.308\% \\
+    \texttt{covid\_main} & 0.03047 & 0.01865 & 0.1023 & +3.094\% \\
+    \texttt{covid\_wave1} & 0.05120 & 0.01787 & 0.0042 & +5.253\% \\
+    \texttt{covid\_2021} & 0.01618 & 0.01263 & 0.2001 & +1.631\% \\
+    \texttt{post\_stat\_change} & -0.04530 & 0.02464 & 0.0660 & -4.429\% \\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.5mm}\scriptsize
+  注）比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$．係数は指定期間に対応するモデル上の水準差であり，因果効果ではない．$p$値は残差自己相関を踏まえ参考情報として扱う．
+\end{center}
+
+\subsection{統計接続後の水準補正}
+\texttt{post\_stat\_change}の推定値は-0.04530，比率換算で-4.429\%である．この変数は2022年8月以降を1とする統計接続用のダミーであり，旧統計から後続統計へ切り替わった後の系列水準をモデル内で補正するために導入した．したがって，負の係数を後続統計期間における宅配便需要の減少や市場縮小とは解釈しない．また，この係数は他のイベントダミー，トレンドおよび季節成分を同時に含む条件付きの水準差である．
+
+\subsection{残差診断と頑健性確認への橋渡し}
+TR0の残差に対するLjung--Box検定の$p$値は，ラグ12で$2.19\times10^{-7}$，ラグ24で$1.08\times10^{-5}$であった．いずれも小さく，残差自己相関が残っている可能性が示される．したがって，残差を白色雑音とみなしたり，適合値のみからモデルの十分性を断定したりせず，表\ref{tab:section4-tr0-coefficients}の$p$値もこの診断上の留保を踏まえて参考情報として扱う．
+
+一方，TR0で推定された傾きノイズは$2.26\times10^{-11}$と極めて小さい．これは傾き状態の確率的変動が小さい可能性を示すが，傾きノイズが厳密にゼロであることを意味しない．第5章では，傾きノイズを0に固定したTR1 / \texttt{fixed\_slope\_m4}を頑健性確認仕様として扱い，イベント係数，分解および診断がトレンド仕様にどの程度依存するかを確認する．
+
+\section{モデル仕様の頑健性確認}
+\draftnote{本章では，固定傾き仕様，トレンドの硬さ，水準ノイズ制約およびイベント期間の設定に対する感度を確認する．}
 
 \section{予測評価}
-\draftnote{COVID one-yearおよびfixed Bの予測評価を，構造分解結果を補う限定的な検証として記述する．}
-
-\section{考察}
-\draftnote{需要イベントと統計接続補正を区別して解釈する範囲，ならびに物流計画上の含意と限界を整理する．}
+\draftnote{本章では，構造分解結果を補う限定的な検証として，COVID one-yearおよびfixed Bの予測評価を行う．}
 
 \section{結論}
-\draftnote{主要な知見，方法上の貢献，および今後の課題を簡潔にまとめる．}
+\draftnote{本章では，分析から得られる知見を要約し，統計接続補正と需要イベントの解釈上の留意点，ならびに今後の課題を整理する．}
 
 % 実際の本文で引用を開始したら \nocite を削除し，引用箇所に \cite を置く．
 \nocite{harvey1989,durbin2012,mlit2026}
@@ -116,13 +266,17 @@ E-mail: author-b@example.jp（Corresponding Author）
 \begin{minipage}{150mm}
 \centering
 {\bfseries\fontsize{12pt}{15pt}\selectfont
-STRUCTURAL CHANGE DECOMPOSITION OF A LINKED JAPANESE PARCEL-VOLUME SERIES\par}
+TIME SERIES ANALYSIS OF STRUCTURAL CHANGES IN PARCEL DELIVERY VOLUMES:\\
+DECOMPOSITION AND FORECAST EVALUATION USING A STATE SPACE MODEL\par}
 \vspace{\baselineskip}
-{\fontsize{12pt}{15pt}\selectfont Author A and Author B\par}
+{\fontsize{12pt}{15pt}\selectfont
+Fuga TERASHIMA\textsuperscript{1}, Yugo AKABANE\textsuperscript{2}, Takumi FUYUKI\textsuperscript{2}, and Tomoyuki HIGUCHI\textsuperscript{2}\par}
 \vspace{\baselineskip}
 \raggedright
 {\fontsize{10pt}{13pt}\selectfont
-This provisional manuscript provides a writing environment for a study of monthly Japanese parcel volumes linked to successor statistics. The planned analysis uses a structural time-series model to distinguish trend, seasonality, COVID-19-related effects, a post-linkage level adjustment, and price-revision periods. The full manuscript will document the data linkage, estimate the model, examine robustness to trend specifications and level-noise constraints, and report limited retrospective forecast evaluations. This abstract is a placeholder only and will be replaced after the empirical results and their interpretation have been finalized.\par}
+This provisional study examines monthly Japanese parcel delivery volumes after linking successor statistics. A state space model is used to decompose structural changes into trend, seasonal components, and event effects. The analysis considers the COVID-19 period, the period after the statistical linkage, and freight-rate revision periods. It will examine the robustness of the estimates to alternative model specifications and conduct limited forecast evaluations. The empirical findings and their interpretation remain to be finalized.\par
+\vspace{\baselineskip}
+{\rmfamily\bfseries\itshape Key Words:\ }\textit{parcel delivery volume, state space model, structural change, time series analysis, forecast evaluation}\par}
 \end{minipage}
 \end{center}
 
