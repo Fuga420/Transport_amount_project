@@ -1,0 +1,8 @@
+model_id,model_label,model_family,rho,exog_columns,design_n_rows,design_n_columns,design_rank,design_condition_number,corr_covid_main_covid_decay,corr_covid_main_post_stat_change,corr_covid_decay_post_stat_change
+current_five_event,current five-variable model,current_five_event,,"hike_dummy,covid_main,covid_wave1,covid_2021,post_stat_change",287,5,5,5.33317159536224,,0.11842766289061697,
+reduced_step,reduced step model,reduced_step,,"hike_dummy,covid_main,post_stat_change",287,3,3,1.3770343741800852,,0.11842766289061697,
+covid_decay_rho_070,COVID decay intervention (rho=0.70),covid_decay,0.7,"hike_dummy,covid_main,covid_decay,post_stat_change",287,4,4,5.5875768000256905,0.35788736924976133,0.11842766289061697,-0.05956641209344278
+covid_decay_rho_080,COVID decay intervention (rho=0.80),covid_decay,0.8,"hike_dummy,covid_main,covid_decay,post_stat_change",287,4,4,5.002906644118008,0.4536468487576949,0.11842766289061697,-0.07482394348494173
+covid_decay_rho_090,COVID decay intervention (rho=0.90),covid_decay,0.9,"hike_dummy,covid_main,covid_decay,post_stat_change",287,4,4,4.600797999563889,0.6597400804645001,0.11842766289061697,-0.08696541801025136
+covid_decay_rho_095,COVID decay intervention (rho=0.95),covid_decay,0.95,"hike_dummy,covid_main,covid_decay,post_stat_change",287,4,4,5.510001510098855,0.8568382760055974,0.11842766289061697,-0.04282643855596326
+covid_decay_rho_098,COVID decay intervention (rho=0.98),covid_decay,0.98,"hike_dummy,covid_main,covid_decay,post_stat_change",287,4,4,10.482789170871285,0.9716449959616599,0.11842766289061697,0.03987075039568054
