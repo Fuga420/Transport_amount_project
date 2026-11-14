@@ -1,4 +1,4 @@
-﻿% !TeX program = uplatex
+% !TeX program = uplatex
 % 土木学会論文集（和文）投稿用の暫定ドラフト
 % 本ファイルは公式配布テンプレートそのものではない．投稿前には最新版の
 % 原稿作成例および投稿要項と照合すること．詳細は build_check.md を参照．
@@ -13,7 +13,7 @@
 
 % 土木学会論文集和文原稿作成例に合わせた基本設定．
 \setlength{\columnsep}{6mm}
-\linespread{0.96}\selectfont
+\linespread{0.99}\selectfont
 \pagestyle{plain}
 \renewcommand{\thesection}{\arabic{section}.}
 
@@ -24,7 +24,7 @@
   {\normalfont\gtfamily\bfseries\fontsize{11pt}{13pt}\selectfont}}
 \renewcommand{\thesubsection}{(\arabic{subsection})}
 \renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
-  {\baselineskip}{0.5\baselineskip}%
+  {\baselineskip}{0pt}%
   {\normalfont\gtfamily\bfseries\fontsize{10pt}{12pt}\selectfont}}
 \renewcommand{\thesubsubsection}{\alph{subsubsection})}
 \renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{\z@}%
@@ -32,12 +32,33 @@
   {\normalfont\gtfamily\bfseries\fontsize{10pt}{12pt}\selectfont}}
 \makeatother
 
-% 参考文献の引用は，上付きの右括弧付き番号とする．
+% 参考文献の引用は，上付きの右括弧付き番号とし，リストも右括弧付き番号・9 ptとする．
 \makeatletter
 \renewcommand{\@cite}[2]{\textsuperscript{#1)}}
+\renewcommand{\@biblabel}[1]{#1)}
+\renewenvironment{thebibliography}[1]{%
+  \par\vspace{\baselineskip}%
+  \begin{center}{\normalfont\gtfamily\bfseries\fontsize{10pt}{12pt}\selectfont REFERENCES}\end{center}%
+  \fontsize{9pt}{11pt}\selectfont
+  \list{\@biblabel{\@arabic\c@enumiv}}%
+       {\settowidth\labelwidth{\@biblabel{#1}}%
+        \leftmargin\labelwidth
+        \advance\leftmargin\labelsep
+        \itemsep=3pt
+        \parsep=0pt
+        \@openbib@code
+        \usecounter{enumiv}%
+        \let\p@enumiv\@empty
+        \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+  \sloppy
+  \clubpenalty4000
+  \@clubpenalty\clubpenalty
+  \widowpenalty4000%
+  \sfcode`\.\@m}
+ {\def\@noitemerr
+   {\@latex@warning{Empty `thebibliography' environment}}%
+  \endlist}
 \makeatother
-
-\newcommand{\draftnote}[1]{\par\noindent\textit{［#1］}\par}
 
 \newcommand{\jtitle}{
 宅配便取扱個数の構造変化に関する時系列分析\\
@@ -50,7 +71,7 @@
 \textsuperscript{1}会員区分：非会員　所属1：中央大学大学院\\
 \textsuperscript{2}会員区分：非会員　所属2：中央大学\\
 \textsuperscript{3}会員区分：非会員　所属3：中央大学理工学術院\\
-E-mail：要確認　Corresponding Author：要確認
+E-mail: 要確認 (Corresponding Author: 要確認)
 }
 
 \begin{document}
@@ -67,9 +88,9 @@ E-mail：要確認　Corresponding Author：要確認
       \vspace{10mm}
       \raggedright
       {\fontsize{9pt}{12pt}\selectfont
-      \textbf{要旨：}本研究は，日本の宅配便取扱個数の月次系列を対象に，状態空間モデルを用いて構造変化をトレンド，季節成分およびイベント効果に分解する分析枠組みを提示する．後続統計への接続を行った系列について，COVID-19期，統計接続後および運賃改定期をイベントとして扱う．さらに，トレンド仕様等のモデル仕様に対する推定結果の頑健性を確認し，限定的な予測評価を行う．結果の解釈は今後の分析に基づき整理する．\par}
+      本研究は，日本の宅配便取扱個数の長期月次系列を対象に，状態空間モデルを用いて観測系列の構造変化をトレンド，月次季節成分，イベント期間に対応する水準差，および後続統計への切替に伴う水準補正に分解した．2002年4月から2026年2月までの接続済み系列に対する推定の結果，COVID初期波に対応する正方向の水準差と，後続統計接続に伴う負方向の水準補正を区別して記述できることを確認した．また，傾きノイズ分散を0に固定した固定傾きモデルでも主要係数，成分分解および直近期間の条件付き予測誤差は基準モデルと概ね同程度であった．一方，水準ノイズ分散を強く制約すると適合度と係数が変化し，残差自己相関も残るため，各係数は因果効果ではなく指定期間に対応するモデル上の水準差として解釈する．\par}
       \vspace{\baselineskip}
-      {\bfseries キーワード：}\textit{宅配便取扱個数，状態空間モデル，構造変化，時系列分析，予測評価}\par
+      {\fontsize{10pt}{12pt}\selectfont {\bfseries\itshape Key Words:\ }\textit{parcel delivery volume, state space model, structural change, time series analysis, forecast evaluation}\par}
       \vspace{10mm}
   \end{minipage}
 \end{center}
@@ -108,15 +129,17 @@ E-mail：要確認　Corresponding Author：要確認
 
 なお，旧統計には2018年4月の一部事業者における集計方法変更により，それ以前との時系列上の連続性が担保されない旨の注記がある．この変更は運賃改定期ダミーの対象期間内に位置するため，同ダミーの係数には統計上の不連続に伴う水準差が含まれ得る．
 
-\begin{center}
+\par\noindent\begin{minipage}{\linewidth}
+\vspace{0.8\baselineskip}
+\centering
 \refstepcounter{table}
 \label{tab:data-events}
-{\small 表\thetable\quad イベント変数の定義\par}
-\vspace{0.5mm}
-\scriptsize
-\renewcommand{\arraystretch}{0.90}
-\setlength{\tabcolsep}{1.2pt}
-\begin{tabular}{p{0.18\linewidth}p{0.31\linewidth}p{0.43\linewidth}}
+{\fontsize{9pt}{11pt}\selectfont {\gtfamily\bfseries 表-\thetable}\quad イベント変数の定義\par}
+\vspace{1mm}
+\fontsize{9pt}{11pt}\selectfont
+\renewcommand{\arraystretch}{0.95}
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{@{}p{0.22\linewidth}p{0.31\linewidth}p{0.43\linewidth}@{}}
 \toprule
 イベント & 期間 & モデル上の解釈 \\
 \midrule
@@ -127,9 +150,10 @@ COVID期 & \mbox{2020/03--2023/05} & COVID期に対応する主たる水準差�
 後続統計接続 & \mbox{2022/08以降} & 統計接続に伴う水準補正であり，需要減少を表すものではない． \\
 \bottomrule
 \end{tabular}
-\par\vspace{0.5mm}\scriptsize
-注）各変数は指定期間に対応するモデル上の水準差を表し，因果効果を示すものではない．
-\end{center}
+\par\vspace{1mm}\raggedright\fontsize{8pt}{10pt}\selectfont
+注）各変数は指定期間に対応するモデル上の水準差を表し，因果効果を示すものではない．\par
+\vspace{0.8\baselineskip}
+\end{minipage}\par
 
 \section{分析方法}
 
@@ -185,44 +209,49 @@ y_t=\mu_t+\gamma_t+\boldsymbol{\beta}^{\prime}\boldsymbol{d}_t+\varepsilon_t .
 
 本章では，第2章で定義した接続済み宅配便取扱個数系列に対する基準モデルの推定結果を示す．
 
-\begin{center}
+\par\noindent\begin{minipage}{\linewidth}
+  \vspace{0.8\baselineskip}
+  \centering
   \includegraphics[width=0.95\linewidth]{figures/section4_tr0_components_column.png}
   \refstepcounter{figure}\label{fig:section4-tr0-components}\\[-1mm]
-  {\small 図\thefigure\quad 基準モデルの成分分解}
-\end{center}
+  {\fontsize{9pt}{11pt}\selectfont {\gtfamily\bfseries 図-\thefigure}\quad 基準モデルの成分分解\par}
+  \vspace{0.8\baselineskip}
+\end{minipage}\par
 \subsection{基準モデルの適合と成分分解}
-基準モデルは287か月の対数系列に対して収束し，対数尤度は584.0694である．観測値と適合値，トレンド，季節成分および残差を図\ref{fig:section4-tr0-components}に示す．
+基準モデルは287か月の対数系列に対して収束し，対数尤度は584.0694である．観測値と適合値，トレンド，季節成分および残差を図-\ref{fig:section4-tr0-components}に示す．
 
 観測値と適合値は，月次の季節変動と長期的な水準上昇に概ね追随している．ただし，適合値と観測値の差が全期間で小さいことを意味するものではなく，残差診断を踏まえて解釈する必要がある．トレンド成分は長期的な上昇を基本としつつ時期により水準の変化を示し，季節成分は月次の周期変動を表している．これらを状態成分として明示的に分離することで，季節的な変動をイベント項や長期トレンドに過度に帰属させることを避けている．
 
 残差は平均の周囲で変動し，一部の時点で比較的大きな正負の乖離を示す．残差標準偏差は0.01072，RMSEは0.01070である．これらは対数尺度の値であり，原系列の個数単位の誤差ではない．
 
 \subsection{イベント係数の推定結果}
-イベント係数を表\ref{tab:section4-tr0-coefficients}に示す．推定値は対数尺度であり，比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$により計算した．各係数は指定期間に対応するモデル上の水準差であり，イベントの因果効果を表すものではない．
+イベント係数を表-\ref{tab:section4-tr0-coefficients}に示す．推定値は対数尺度であり，比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$により計算した．各係数は指定期間に対応するモデル上の水準差であり，イベントの因果効果を表すものではない．
 
-運賃改定期ダミーは負方向の水準差（-2.308\%）であるが，これは指定した期間に対応する条件付きの値であり，運賃改定による需要の因果的変化や価格弾力性を推定したものではない．COVID期ダミーは+3.094\%，COVID初期波ダミーは+5.253\%，2021年局面ダミーは+1.631\%であり，初期波の指定期間に対応する水準差が相対的に大きい．これらも固定期間を設定したモデル上の関係として解釈する．
+運賃改定期ダミーは負方向の水準差（$-2.308\%$）であるが，これは指定した期間に対応する条件付きの値であり，運賃改定による需要の因果的変化や価格弾力性を推定したものではない．COVID期ダミーは$+3.094\%$，COVID初期波ダミーは$+5.253\%$，2021年局面ダミーは$+1.631\%$であり，初期波の指定期間に対応する水準差が相対的に大きい．これらも固定期間を設定したモデル上の関係として解釈する．
 
-\begin{center}
+\par\noindent\begin{minipage}{\linewidth}
+  \vspace{0.8\baselineskip}
+  \centering
   \refstepcounter{table}\label{tab:section4-tr0-coefficients}
-  {\small 表\thetable\quad 基準モデルのイベント係数推定結果\par}
-  \vspace{0.5mm}
-  \footnotesize
-  \renewcommand{\arraystretch}{0.90}
-  \setlength{\tabcolsep}{2pt}
-  \begin{tabular}{lrrr}
+  {\fontsize{9pt}{11pt}\selectfont {\gtfamily\bfseries 表-\thetable}\quad 基準モデルのイベント係数推定結果\par}
+  \vspace{1mm}
+  \fontsize{9pt}{11pt}\selectfont
+  \renewcommand{\arraystretch}{0.95}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrr@{}}
     \toprule
     変数 & 推定値 & 標準誤差 & 比率換算値 \\
     \midrule
-    運賃改定期 & -0.02335 & 0.02721 & -2.308\% \\
-    COVID期 & 0.03047 & 0.01865 & +3.094\% \\
-    COVID初期波 & 0.05120 & 0.01787 & +5.253\% \\
-    2021年局面 & 0.01618 & 0.01263 & +1.631\% \\
-    後続統計接続 & -0.04530 & 0.02464 & $-4.429\%$ \\
+    運賃改定期 & $-0.02335$ & $0.02721$ & $-2.308\%$ \\
+    COVID期 & $0.03047$ & $0.01865$ & $+3.094\%$ \\
+    COVID初期波 & $0.05120$ & $0.01787$ & $+5.253\%$ \\
+    2021年局面 & $0.01618$ & $0.01263$ & $+1.631\%$ \\
+    後続統計接続 & $-0.04530$ & $0.02464$ & $-4.429\%$ \\
     \bottomrule
-  \end{tabular}
-  \par\vspace{0.5mm}\scriptsize
-  注）比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$．係数は指定期間に対応するモデル上の水準差であり，因果効果ではない．標準誤差は通常の状態空間モデル推定に基づくものであり，残差自己相関を踏まえ参考情報として扱う．
-\end{center}
+  \end{tabular*}
+  \par\vspace{1mm}\raggedright\fontsize{8pt}{10pt}\selectfont
+  注）比率換算値は$100\{\exp(\hat{\beta}_j)-1\}$．係数は指定期間に対応するモデル上の水準差であり，因果効果ではない．標準誤差は通常の状態空間モデル推定に基づくものであり，残差自己相関を踏まえ参考情報として扱う．\par
+  \vspace{0.8\baselineskip}
+\end{minipage}\par
 
 \subsection{統計接続後の水準補正}
 後続統計ダミーの推定値は$-0.04530$，比率換算で$-4.429\%$である．この変数は2022年8月以降を1とする統計接続用のダミーであり，旧統計から後続統計へ切り替わった後の系列水準をモデル内で補正するために導入した．したがって，負の係数を後続統計期間における宅配便需要の減少や市場縮小とは解釈しない．また，この係数は他のイベントダミー，トレンドおよび季節成分を同時に含む条件付きの水準差である．
@@ -237,19 +266,19 @@ y_t=\mu_t+\gamma_t+\boldsymbol{\beta}^{\prime}\boldsymbol{d}_t+\varepsilon_t .
 本章では，基準モデルを起点として，傾きノイズ分散を0に固定した固定傾きモデル，水準ノイズ分散を段階的に制約した水準ノイズ制約モデル，および決定的線形トレンドモデルを比較する．数値は感度分析結果を丸めて示す．イベント係数は，指定期間に対応するモデル上の水準差であり，因果効果として解釈しない．
 
 \subsection{固定傾き仕様との比較}
-基準モデルと固定傾きモデルは，287か月の同一系列，同一の季節成分および5個のイベントダミーを用い，傾きノイズ分散の扱いだけが異なる．基準モデルの傾きノイズ分散は$2.3\times10^{-11}$で境界に近く，固定傾きモデルではこれを0に固定した．両仕様は収束し，対数尤度はともに約584.1である．AICは基準モデルの-1124.1に対して固定傾きモデルが-1126.1，BICは-1043.6に対して-1049.3であり，固定傾きモデルがわずかに小さい．ただし，この差はほぼ同じ尤度で推定パラメータを1つ減らしたことによる情報量基準の差であり，固定傾きモデルの全面的な優位を示すものではない．
+基準モデルと固定傾きモデルは，287か月の同一系列，同一の季節成分および5個のイベントダミーを用い，傾きノイズ分散の扱いだけが異なる．基準モデルの傾きノイズ分散は$2.3\times10^{-11}$で境界に近く，固定傾きモデルではこれを0に固定した．両仕様は収束し，対数尤度はともに約584.1である．AICは基準モデルの$-1124.1$に対して固定傾きモデルが$-1126.1$，BICは$-1043.6$に対して$-1049.3$であり，固定傾きモデルがわずかに小さい．ただし，この差はほぼ同じ尤度で推定パラメータを1つ減らしたことによる情報量基準の差であり，固定傾きモデルの全面的な優位を示すものではない．
 
-主要イベント係数の比率換算値は，基準モデルから固定傾きモデルへ変更しても大きく変化しない．運賃改定期ダミーはともに-2.3\%，COVID期ダミーは+3.1\%前後，COVID初期波ダミーは+5.3\%前後，2021年局面ダミーは+1.6\%，後続統計ダミーは-4.4\%前後である．したがって，COVID初期波に対応する正方向の水準差と統計接続後の水準補正を区別するという主結果は，傾きノイズの有無に大きく依存しないと整理できる．ただし，後続統計ダミーは需要減少ではなく，統計接続に伴う水準補正として読む必要がある．
+主要イベント係数の比率換算値は，基準モデルから固定傾きモデルへ変更しても大きく変化しない．運賃改定期ダミーはともに$-2.3\%$，COVID期ダミーは$+3.1\%$前後，COVID初期波ダミーは$+5.3\%$前後，2021年局面ダミーは$+1.6\%$，後続統計ダミーは$-4.4\%$前後である．したがって，COVID初期波に対応する正方向の水準差と統計接続後の水準補正を区別するという主結果は，傾きノイズの有無に大きく依存しないと整理できる．ただし，後続統計ダミーは需要減少ではなく，統計接続に伴う水準補正として読む必要がある．
 
 残差標準偏差は両仕様とも約0.0107であり，Ljung--Box検定の$p$値もラグ12で約$2.2\times10^{-7}$，ラグ24で約$1.1\times10^{-5}$と近い．固定傾き化によって残差自己相関が解消したとはいえない．以上から，固定傾きモデルは基準モデルと同等の簡約仕様として，主結果の頑健性を確認する最重要仕様に位置付ける．
 
 \subsection{水準ノイズ分散制約によるトレンド硬さの比較}
-水準ノイズ制約モデルでは，固定傾きモデルで推定された水準ノイズ分散を基準とし，その0.5，0.25，0.1倍に固定した．制約を強めると，対数尤度は約581.0，572.3，555.0へ低下し，AICも-1122.0，-1104.7，-1070.1へ上昇した．残差標準偏差も約0.0128から0.0179へ増加し，トレンドを硬くするほど適合度が悪化する傾向が確認される．
+水準ノイズ制約モデルでは，固定傾きモデルで推定された水準ノイズ分散を基準とし，その0.5，0.25，0.1倍に固定した．制約を強めると，対数尤度は約581.0，572.3，555.0へ低下し，AICも$-1122.0$，$-1104.7$，$-1070.1$へ上昇した．残差標準偏差も約0.0128から0.0179へ増加し，トレンドを硬くするほど適合度が悪化する傾向が確認される．
 
-係数の方向は概ね維持されるものの，水準ノイズ分散の制約に応じて大きさが変化する．例えば，COVID期ダミーの比率換算値は，水準ノイズ分散を0.5倍，0.25倍，0.1倍に固定した場合にそれぞれ+3.6\%，+4.0\%，+4.4\%，後続統計ダミーは-5.2\%，-5.7\%，-5.8\%である．この結果は，基準モデルと固定傾きモデルの間で得られた安定性を，任意の硬いトレンド仕様に対する安定性へ一般化できないことを示す．水準ノイズ分散の制約は，イベント期間に対応する水準差をトレンドから切り分ける方法そのものに影響するため，本稿では感度分析として報告する．
+係数の方向は概ね維持されるものの，水準ノイズ分散の制約に応じて大きさが変化する．例えば，COVID期ダミーの比率換算値は，水準ノイズ分散を0.5倍，0.25倍，0.1倍に固定した場合にそれぞれ$+3.6\%$，$+4.0\%$，$+4.4\%$，後続統計ダミーは$-5.2\%$，$-5.7\%$，$-5.8\%$である．この結果は，基準モデルと固定傾きモデルの間で得られた安定性を，任意の硬いトレンド仕様に対する安定性へ一般化できないことを示す．水準ノイズ分散の制約は，イベント期間に対応する水準差をトレンドから切り分ける方法そのものに影響するため，本稿では感度分析として報告する．
 
 \subsection{決定的線形トレンドモデルの扱い}
-決定的線形トレンドモデルは，推定が未収束であった．対数尤度は約531.0，AICは-1022.0，BICは-948.8であるが，未収束であるため，これらを正式なモデル比較には用いず，参考値として扱う．残差標準偏差も約0.0271と大きく，Ljung--Box検定の$p$値はラグ12，24とも極めて小さい．したがって，決定的線形トレンドモデルの係数や適合度を主結論の根拠には用いず，硬すぎるトレンド仮定が構造分解を不安定にし得ることを示す参考結果として扱う．
+決定的線形トレンドモデルは，推定が未収束であった．対数尤度は約531.0，AICは$-1022.0$，BICは$-948.8$であるが，未収束であるため，これらを正式なモデル比較には用いず，参考値として扱う．残差標準偏差も約0.0271と大きく，Ljung--Box検定の$p$値はラグ12，24とも極めて小さい．したがって，決定的線形トレンドモデルの係数や適合度を主結論の根拠には用いず，硬すぎるトレンド仮定が構造分解を不安定にし得ることを示す参考結果として扱う．
 
 \subsection{本章のまとめ}
 基準モデルと固定傾きモデルは，情報量基準，主要イベント係数，残差標準偏差および残差診断がほぼ同じであり，主結果は傾きノイズ分散を推定するか0に固定するかに大きく依存しない．一方，水準ノイズ分散を強く制約すると適合度が低下し，COVID期ダミーおよび後続統計ダミーの水準差も変化する．決定的線形トレンドモデルは未収束であり，参考仕様にとどめる．以上より，本稿では基準モデルを中心とし，固定傾きモデルを最重要の頑健性仕様とする方針を支持する．ただし，残差自己相関が残るため，いずれの仕様についても係数の$p$値や適合度を過度に強調せず，固定期間ダミーに基づくモデル上の水準差として解釈する．
@@ -261,20 +290,22 @@ y_t=\mu_t+\gamma_t+\boldsymbol{\beta}^{\prime}\boldsymbol{d}_t+\varepsilon_t .
 
 状態空間モデルでは，対数尺度の予測値を$\widehat{q}_t=\exp(\widehat{y}_t)$により原系列へ単純逆変換した．予測分散を用いた対数正規バイアス補正は行っていない．また，MASEの分母には学習期間の12か月季節ナイーブ誤差，すなわち$d_{12}=(n-12)^{-1}\sum_{t=13}^{n}|q_t-q_{t-12}|$を用いた\cite{hyndman2006}．
 
-予測の情報条件を区別する必要がある．季節ナイーブは将来の外生変数を用いない無条件予測である．一方，SSMの条件付き予測（conditional forecast）は，学習期間のみでパラメータを推定し，評価期間の目的変数を予測時に用いず，評価期間における運賃改定期ダミー，COVID期ダミー，COVID初期波ダミー，2021年局面ダミーおよび後続統計ダミーの値を既知として与えた予測である．fixed Bでは，この外生ダミーの値は各評価月について$(0,0,0,0,1)$であり，後続統計レジームの継続を既知とした条件付き予測に相当する．したがって，両者の指標を同一の情報条件に基づく単純な順位として解釈せず，各条件下の予測誤差として読む必要がある．
+予測の情報条件を区別する必要がある．季節ナイーブは将来の外生変数を用いない無条件予測である．一方，SSMの条件付き予測（conditional forecast）は，学習期間のみでパラメータを推定し，評価期間の目的変数を予測時に用いず，評価期間における運賃改定期ダミー，COVID期ダミー，COVID初期波ダミー，2021年局面ダミーおよび後続統計ダミーの値を既知として与えた予測である．直近期間評価では，この外生ダミーの値は各評価月について$(0,0,0,0,1)$であり，後続統計レジームの継続を既知とした条件付き予測に相当する．したがって，両者の指標を同一の情報条件に基づく単純な順位として解釈せず，各条件下の予測誤差として読む必要がある．
 
 表-\ref{tab:section6-fixed-b}に直近期間評価の結果を示す．季節ナイーブのRMSE，MAE，MAPEおよびMASEは，それぞれ13,623，11,620，2.91\%，0.929であった．これに対し，SSM（基準モデル）は8,113，6,756，1.72\%，0.540，SSM（固定傾き）は8,135，6,729，1.71\%，0.538である．両SSMは近い値を示し，傾きノイズを固定したことによる予測差は限定的である．ただし，RMSEでは基準モデルが，MAE，MAPEおよびMASEでは固定傾きモデルがわずかに小さく，いずれか一方の仕様が一貫して優れるとはいえない．
 
 参考として，季節性を含む回帰型時系列モデルの探索結果は，RMSE 7,975，MAE 6,701，MAPE 1.71\%，MASE 0.536であり，SSMと近い水準であった．ただし，この探索では候補の選択に評価期間のRMSEを用いているため，完全に独立した外部テスト結果ではない．モデル間で情報条件，推定手順および仕様も同一ではないため，この結果を予測精度の順位付けの根拠とはしない．
 
-\begin{center}
+\par\noindent\begin{minipage}{\linewidth}
+  \vspace{0.8\baselineskip}
+  \centering
   \refstepcounter{table}\label{tab:section6-fixed-b}
-  {\small 表\thetable\quad 直近期間評価における予測評価\par}
-  \vspace{0.5mm}
-  \scriptsize
-  \renewcommand{\arraystretch}{0.90}
+  {\fontsize{9pt}{11pt}\selectfont {\gtfamily\bfseries 表-\thetable}\quad 直近期間評価における予測評価\par}
+  \vspace{1mm}
+  \fontsize{9pt}{11pt}\selectfont
+  \renewcommand{\arraystretch}{1.0}
   \setlength{\tabcolsep}{1.5pt}
-  \begin{tabular}{lrrrr}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrrr@{}}
     \toprule
     モデル & RMSE & MAE & MAPE(\%) & MASE \\
     \midrule
@@ -282,12 +313,13 @@ y_t=\mu_t+\gamma_t+\boldsymbol{\beta}^{\prime}\boldsymbol{d}_t+\varepsilon_t .
     SSM（基準モデル） & 8,113 & 6,756 & 1.72 & 0.540 \\
     SSM（固定傾き） & 8,135 & 6,729 & 1.71 & 0.538 \\
     \bottomrule
-  \end{tabular}
-  \par\vspace{0.5mm}\scriptsize
-  注）季節ナイーブは無条件予測，SSMは評価期間の外生ダミーを既知として与えた条件付き予測である．指標は原系列スケールで計算した．
-\end{center}
+  \end{tabular*}
+  \par\vspace{1mm}\raggedright\fontsize{8pt}{10pt}\selectfont
+  注）季節ナイーブは無条件予測，SSMは評価期間の外生ダミーを既知として与えた条件付き予測である．指標は原系列スケールで計算した．\par
+  \vspace{0.8\baselineskip}
+\end{minipage}\par
 
-COVID one-year設定では，2002年4月から2021年2月までの227か月を学習期間，2021年3月から2023年5月までの27か月を評価期間とした．SSM（基準モデル）のRMSE，MAE，MAPEおよびMASEは18,236，14,561，3.67\%，1.180，SSM（固定傾き）は18,245，14,565，3.67\%，1.180であり，両仕様はほぼ同じであった．一方，この学習期間では後続統計ダミーが一定値となるため，該当する統計接続後の水準補正を学習できず，この結果は直近期間評価と同列の主評価ではなく補助的な確認として扱う．
+また，COVID初期1年を含む期間までを学習する補助設定（2002年4月から2021年2月までの227か月を学習期間，2021年3月から2023年5月までの27か月を評価期間）では，SSM（基準モデル）のRMSE，MAE，MAPEおよびMASEは18,236，14,561，3.67\%，1.180，SSM（固定傾き）は18,245，14,565，3.67\%，1.180であり，両仕様はほぼ同じであった．一方，この学習期間では後続統計ダミーが一定値となるため，該当する統計接続後の水準補正を学習できず，この結果は直近期間評価と同列の主評価ではなく補助的な確認として扱う．
 
 以上の予測評価は，既知のイベントダミーを条件とするSSM予測と，外生変数を用いない季節ナイーブ予測を並べたものである．SSMが将来のイベントを無条件に予測できたことや，いずれの条件でも予測精度が常に優れることを示すものではない．直近期間評価において基準モデルと固定傾きモデルの指標が概ね同程度であったことから，傾きノイズの扱いが予測評価を大きく左右しないことが補助的に確認された．
 
@@ -302,18 +334,15 @@ COVID one-year設定では，2002年4月から2021年2月までの227か月を�
 
 本研究にはいくつかの限界がある．旧統計と後続統計は対象事業者や集計範囲が完全に同一ではなく，接続後の水準補正を導入しても両系列の非同質性を完全に解消するものではない．また，イベントダミーは分析上設定した操作的な期間変数であり，各事象の因果効果を識別するものではない．さらに，残差自己相関が残っているため，係数の$p$値や適合度は参考情報として慎重に扱う必要がある．今後は，事業者別情報や連続的な外生変数を取り入れた分析，イベント効果の時変性を許すモデル，および将来の外生情報を未知とするより厳密な予測設定を検討することが課題である．
 
-\begin{center}
-{\gtfamily\bfseries REFERENCES}
-\end{center}
-\bibliographystyle{jplain}
+\bibliographystyle{junsrt}
 \bibliography{references}
 
 \end{multicols}
 \begin{flushright}
-{\bfseries\fontsize{10pt}{12pt}\selectfont (Received ?)}\\
-{\bfseries\fontsize{10pt}{12pt}\selectfont (Accepted ?)}
+{\bfseries\fontsize{9pt}{11pt}\selectfont (Received ?)}\\
+{\bfseries\fontsize{9pt}{11pt}\selectfont (Accepted ?)}
 \end{flushright}
-\vspace{10mm}
+\vspace{8mm}
 \begin{center}
 \begin{minipage}{150mm}
 \centering
@@ -322,13 +351,10 @@ TIME SERIES ANALYSIS OF STRUCTURAL CHANGES IN PARCEL DELIVERY VOLUMES:\\
 DECOMPOSITION AND FORECAST EVALUATION USING A STATE SPACE MODEL\par}
 \vspace{\baselineskip}
 {\fontsize{12pt}{15pt}\selectfont
-Fuga TERASHIMA\textsuperscript{1}, Yugo AKABANE\textsuperscript{2}, Takumi FUYUKI\textsuperscript{2}, and Tomoyuki HIGUCHI\textsuperscript{2}\par}
+Fuga TERASHIMA\textsuperscript{1}, Yugo AKABANE\textsuperscript{2}, Takumi FUYUKI\textsuperscript{1} and Tomoyuki HIGUCHI\textsuperscript{3}\par}
 \vspace{\baselineskip}
-\raggedright
 {\fontsize{10pt}{13pt}\selectfont
-This provisional study examines monthly Japanese parcel delivery volumes after linking successor statistics. A state space model is used to decompose structural changes into trend, seasonal components, and event effects. The analysis considers the COVID-19 period, the period after the statistical linkage, and freight-rate revision periods. It will examine the robustness of the estimates to alternative model specifications and conduct limited forecast evaluations. The empirical findings and their interpretation remain to be finalized.\par
-\vspace{\baselineskip}
-{\rmfamily\bfseries\itshape Key Words:\ }\textit{parcel delivery volume, state space model, structural change, time series analysis, forecast evaluation}\par}
+\parbox{\linewidth}{\noindent This study examines monthly Japanese parcel delivery volumes from April 2002 to February 2026 after linking the discontinued survey and its successor statistics. Using a state space model, the observed log series is decomposed into a trend component, monthly seasonality, level differences associated with specified event periods (freight-rate revisions and COVID-19 phases), and a level adjustment for the statistical linkage from August 2022 onward. The baseline local linear trend model separates the positive level difference during the initial COVID-19 wave from the negative level adjustment following the statistical transition. Robustness checks show that fixing the slope-noise variance at zero yields similar event coefficients, decompositions, and conditional forecast errors in the recent evaluation period, whereas strongly constraining the level-noise variance worsens model fit and alters coefficient magnitudes. Because residual autocorrelation remains and unobserved factors are not controlled for, the estimated coefficients are interpreted as model-based level differences rather than causal effects.}\par}
 \end{minipage}
 \end{center}
 
